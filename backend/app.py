@@ -1,34 +1,25 @@
 # backend/app.py
 
-import sqlite3
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app)
+# 1. Importamos o nosso blueprint do arquivo auth.py
+from routes.auth import auth_bp
 
-# Função auxiliar para pegar uma conexão com o banco de dados
-def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+def create_app():
+    # Cria a instância da aplicação Flask
+    app = Flask(__name__)
+    CORS(app)
 
-# Nossa rota de teste, agora conectando ao BD
-@app.route('/api/status')
-def get_status():
-    try:
-        conn = get_db_connection()
-        # Executa uma consulta SQL para buscar a mensagem da tabela 'teste'
-        db_data = conn.execute('SELECT mensagem FROM teste WHERE id = 1').fetchone()
-        conn.close()
-        
-        # Se não encontrar nada, retorna um erro
-        if db_data is None:
-            return jsonify({"status": "Banco de dados conectado, mas a tabela de teste está vazia."}), 500
-            
-        # Se encontrou, retorna a mensagem do banco
-        return jsonify({"status": db_data['mensagem']})
+    # 2. Registra o blueprint na aplicação
+    # O url_prefix='/api' significa que todas as rotas dentro do auth_bp 
+    # começarão com /api. Ex: /login vira /api/login
+    app.register_blueprint(auth_bp, url_prefix='/api')
 
-    except Exception as e:
-        # Se der qualquer erro na conexão ou na consulta, retorna uma mensagem de erro
-        return jsonify({"status": f"Erro ao conectar ou consultar o banco de dados: {e}"}), 500
+    return app
+
+# Este bloco só é necessário se você for rodar com 'python app.py'
+# Para 'flask run', ele não é usado.
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)
