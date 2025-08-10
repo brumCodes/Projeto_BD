@@ -7,9 +7,9 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Alert } from '@mui/material';
+import { Alert, Link } from '@mui/material';
 
-function LoginPage({ onLoginSuccess }) {
+function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -76,6 +76,11 @@ function LoginPage({ onLoginSuccess }) {
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
             Entrar
           </Button>
+
+          <Link href="#" variant="body2" onClick={onSwitchToRegister}>
+            {"Não tem uma conta? Cadastre-se"}
+          </Link>
+          
         </Box>
       </Box>
     </Container>

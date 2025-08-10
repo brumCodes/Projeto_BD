@@ -78,4 +78,4 @@ CREATE TABLE IF NOT EXISTS Filme_Lista (
     ON UPDATE CASCADE
 );
 
-INSERT INTO usuario (nome_usuario, senha) VALUES ('admin', 'admin@email.com', 'admin');
+INSERT INTO usuario (nome_usuario, email, senha) VALUES ('admin', 'admin@email.com', 'admin');
