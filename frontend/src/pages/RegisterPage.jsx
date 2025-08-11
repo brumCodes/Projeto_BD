@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, TextField, Container, Box, Typography, CssBaseline, Alert, Link } from '@mui/material';
 
-// A propriedade 'onSwitchToLogin' será usada para o link "voltar para login"
+
 function RegisterPage({ onSwitchToLogin }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
