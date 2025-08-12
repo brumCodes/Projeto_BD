@@ -1,50 +1,49 @@
+// frontend/src/pages/DashboardPage.jsx
+
 import React, { useState, useEffect } from 'react';
-import './DashboardPage.css';
+import './DashboardPage.css'; // Importa seu arquivo CSS
 import { 
   Box, AppBar, Toolbar, Typography, Button, Container, IconButton, TextField, 
   Grid, Card, CardMedia, CardContent, CardActions 
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';
+import AddMovieForm from '../components/AddMovieForm';
 
 function DashboardPage({ usuario, onLogout }) {
   const [filmes, setFilmes] = useState([]);
+  const [openAddModal, setOpenAddModal] = useState(false);
+
+  const fetchFilmes = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/filmes');
+      const data = await response.json();
+      setFilmes(data);
+    } catch (error) {
+      console.error("Erro ao buscar filmes:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchFilmes = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/api/filmes');
-        const data = await response.json();
-        setFilmes(data);
-      } catch (error) {
-        console.error("Erro ao buscar filmes:", error);
-      }
-    };
     fetchFilmes();
   }, []);
+
+  const handleMovieAdded = () => {
+    fetchFilmes();
+  };
 
   return (
     <Box className="dashboard-container">
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" sx={{ mr: 2 }}>
-            Logo
-          </Typography>
+          <Typography variant="h6" sx={{ mr: 2 }}>Logo</Typography>
           <Box className="dashboard-search">
-            <TextField fullWidth variant="standard" placeholder="Pesquisar filmes..." InputProps={{ disableUnderline: true }} />
+            <TextField fullWidth variant="standard" placeholder="Pesquisar filmes..." InputProps={{ disableUnderline: true, sx: { '.MuiInputBase-input': { padding: '8px', color: 'white' } } }} />
           </Box>
-          <Box sx={{ flexGrow: 1, ml: 2 }}>
-            <Button color="inherit">Filtros</Button>
-          </Box>
-          <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }}>
-            Add Filme
-          </Button>
-          <IconButton color="inherit">
-            <PersonIcon />
-          </IconButton>
-          <Button color="inherit" onClick={onLogout}>
-            Sair
-          </Button>
+          <Box sx={{ flexGrow: 1, ml: 2 }}><Button color="inherit">Filtros</Button></Box>
+          <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }} onClick={() => setOpenAddModal(true)}>Add Filme</Button>
+          <IconButton color="inherit"><PersonIcon /></IconButton>
+          <Button color="inherit" onClick={onLogout}>Sair</Button>
         </Toolbar>
       </AppBar>
 
@@ -53,13 +52,15 @@ function DashboardPage({ usuario, onLogout }) {
           Catálogo de Filmes
         </Typography>
 
-        <Box className="dashboard-grid-wrapper">
+        <Box>
           <Grid container spacing={3} justifyContent="center">
             {filmes.map((filme) => (
-              <Grid item key={filme.id_filme} xs={12} sm={6} md={4} lg={3}>
+              // A MUDANÇA PRINCIPAL ESTÁ AQUI: SEM PROPRIEDADES RESPONSIVAS
+              <Grid item key={filme.id_filme}>
                 <Card className="dashboard-card">
                   <CardMedia
                     className="dashboard-card-media"
+                    component="img" // Usando component="img" para o object-fit funcionar
                     image={filme.url_poster}
                     title={filme.titulo}
                   />
@@ -78,6 +79,12 @@ function DashboardPage({ usuario, onLogout }) {
           </Grid>
         </Box>
       </Container>
+      
+      <AddMovieForm 
+        open={openAddModal} 
+        onClose={() => setOpenAddModal(false)}
+        onSuccess={handleMovieAdded}
+      />
     </Box>
   );
 }

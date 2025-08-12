@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import sqlite3
 
 filmes_bp = Blueprint('filmes', __name__)
@@ -17,3 +17,29 @@ def get_filmes():
     filmes_list = [dict(filme) for filme in filmes_db]
     
     return jsonify(filmes_list)
+
+@filmes_bp.route('/filmes', methods=['POST'])
+def add_filme():
+    # Pega os dados que o formulário enviou
+    data = request.get_json()
+
+    # Separa cada informação em uma variável
+    titulo = data.get('titulo')
+    ano = data.get('ano')
+    diretor = data.get('diretor')
+    genero = data.get('genero')
+    duracao = data.get('duracao')
+    sinopse = data.get('sinopse')
+    url_poster = data.get('url_poster')
+
+    id_usuario = 1
+    conn = get_db_connection()
+    conn.execute(
+        'INSERT INTO Filme (id_usuario, titulo, ano, duracao, diretor, genero, sinopse, url_poster) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (id_usuario, titulo, ano, duracao, diretor, genero, sinopse, url_poster)
+    )
+    conn.commit()
+    conn.close()
+
+
+    return jsonify({"message": "Filme adicionado com sucesso!"}), 201

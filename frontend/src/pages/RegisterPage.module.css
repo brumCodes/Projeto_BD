@@ -1,0 +1,19 @@
+.registerContainer {
+  margin-top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.registerForm {
+  margin-top: 8px;
+}
+
+.registerButton {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.alertMargin {
+  margin-top: 16px;
+}
