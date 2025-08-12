@@ -1,0 +1,55 @@
+.dashboard-container {
+  flex-grow: 1;
+  background-color: #f4f4f4;
+  min-height: 100vh;
+}
+
+.dashboard-search {
+  position: relative;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  width: 50%;
+}
+
+.dashboard-search:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.dashboard-search input {
+  padding: 8px;
+  color: white;
+}
+
+.dashboard-main {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.dashboard-grid-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 200px);
+}
+
+.dashboard-card {
+  height: 400px;
+  width: 202px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card-media {
+  height: 300px;
+  width: 202px;
+  object-fit: cover;
+}
+
+.dashboard-card-title {
+  height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  line-height: 40px;
+}

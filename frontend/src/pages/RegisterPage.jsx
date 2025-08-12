@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, TextField, Container, Box, Typography, CssBaseline, Alert, Link } from '@mui/material';
-
+import './RegisterPage.css';  // Importa o CSS
 
 function RegisterPage({ onSwitchToLogin }) {
   const [username, setUsername] = useState('');
@@ -32,11 +32,11 @@ function RegisterPage({ onSwitchToLogin }) {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box className="registerContainer">
         <Typography component="h1" variant="h5">
           Criar Conta
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} className="registerForm">
           <TextField
             margin="normal" required fullWidth id="username"
             label="Nome de Usuário" name="username" autoFocus
@@ -53,10 +53,10 @@ function RegisterPage({ onSwitchToLogin }) {
             value={password} onChange={(e) => setPassword(e.target.value)}
           />
           
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-          {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
+          {error && <Alert severity="error" className="alertMargin">{error}</Alert>}
+          {success && <Alert severity="success" className="alertMargin">{success}</Alert>}
 
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+          <Button type="submit" fullWidth variant="contained" className="registerButton">
             Cadastrar
           </Button>
           <Link href="#" variant="body2" onClick={onSwitchToLogin}>

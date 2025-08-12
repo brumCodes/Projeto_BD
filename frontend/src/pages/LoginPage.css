@@ -1,0 +1,19 @@
+.loginContainer {
+  margin-top: 64px; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loginForm {
+  margin-top: 8px; 
+}
+
+.loginButton {
+  margin-top: 24px; 
+  margin-bottom: 16px; 
+}
+
+.errorAlert {
+  margin-top: 16px; 
+}

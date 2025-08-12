@@ -1,5 +1,3 @@
-// frontend/src/pages/LoginPage.jsx
-
 import { useState } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -8,6 +6,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Alert, Link } from '@mui/material';
+import './LoginPage.css';
 
 function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
   const [username, setUsername] = useState('');
@@ -43,11 +42,11 @@ function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box className="loginContainer">
         <Typography component="h1" variant="h5">
           Login
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} className="loginForm">
           <TextField
             margin="normal"
             required
@@ -71,9 +70,9 @@ function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
             onChange={(e) => setPassword(e.target.value)}
           />
           
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+          {error && <Alert severity="error" className="errorAlert">{error}</Alert>}
 
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+          <Button type="submit" fullWidth variant="contained" className="loginButton">
             Entrar
           </Button>
 
