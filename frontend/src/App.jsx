@@ -17,8 +17,10 @@ function App() {
   };
 
     const handleVerDetalhes = (filme) => {
+    console.log('Filme selecionado: ', filme);
     setFilmeSelecionado(filme);
     setView('filmeDetalhes');
+    console.log('View atualizada para', 'filmeDetalhes ');
   };
 
 const renderView = () => {

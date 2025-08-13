@@ -9,19 +9,34 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
 
   return (
     <Box sx={{
-      minHeight: '100vh',
-      background: 'linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7))',
-      color: 'white',
-      padding: 4
+      minHeight: '100vh', position: 'relative', color: 'white', padding: 4,
+      '&::before':{
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url(${filme.url_poster})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        filter : 'blur(16px)',
+        opacity: 0.7,
+        zIndex: -1
+      },
+      '&::after':{
+        content: '""',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: 'linear-gradient(rgba(20, 20, 20, 0.3), rgba(51, 51, 51, 0.8))',
+        zIndex: -1
+      }
     }}>
-      <Container>
+    <Container sx ={{ position: 'relative', zIndex: 1 }}>
         <Grid container spacing={4}>
           {/* Coluna da Esquerda - Poster */}
           <Grid item xs={12} md={4}>
             <img
               src={filme.url_poster}
               alt={filme.titulo}
-              style={{ width: '100%', borderRadius: '10px', maxWidth: '300px' }}
+              style={{ width: '100%', borderRadius: '10px', maxWidth: '260px' }}
             />
           </Grid>
 
@@ -60,7 +75,7 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
             <Button
               variant="contained"
               onClick={onVoltar}
-              sx={{ mt: 4 }}
+              sx={{ mt: 4 , backgroundColor: '#c343ddff', '&:hover' :{ backgroundColor: '#5c0f74ff' }}}
             >
               Voltar
             </Button>
