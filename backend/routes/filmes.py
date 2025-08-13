@@ -38,10 +38,10 @@ def pesquisar_filmes():
 
 @filmes_bp.route('/filmes', methods=['POST'])
 def add_filme():
-    # Pega os dados que o formulário enviou
+    #pega os dados que o formulário enviou
     data = request.get_json()
 
-    # Separa cada informação em uma variável
+    #separa cada informação em uma variável
     titulo = data.get('titulo')
     ano = data.get('ano')
     diretor = data.get('diretor')

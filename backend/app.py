@@ -3,12 +3,12 @@
 from flask import Flask
 from flask_cors import CORS
 
-# Importamos o nosso blueprint do arquivo auth.py
+#Importamos o nosso blueprint do arquivo auth.py
 from routes.auth import auth_bp
 from routes.filmes import filmes_bp
 
 def create_app():
-    # Cria a instância da aplicação Flask
+    #Cria a instância da aplicação Flask
     app = Flask(__name__)
     CORS(app)
 
