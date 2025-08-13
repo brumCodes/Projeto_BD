@@ -18,6 +18,24 @@ def get_filmes():
     
     return jsonify(filmes_list)
 
+
+@filmes_bp.route('/filmes/pesquisa', methods=['GET'])
+def pesquisar_filmes():
+    termo_pesquisa = request.args.get('q', '')
+    
+    conn = get_db_connection()
+    filmes_db = conn.execute(
+        '''SELECT * FROM Filme 
+           WHERE LOWER(titulo) LIKE LOWER(?) 
+           OR LOWER(diretor) LIKE LOWER(?) 
+           OR LOWER(genero) LIKE LOWER(?)''',
+        (f'%{termo_pesquisa}%', f'%{termo_pesquisa}%', f'%{termo_pesquisa}%')
+    ).fetchall()
+    conn.close()
+    
+    filmes_list = [dict(filme) for filme in filmes_db]
+    return jsonify(filmes_list)
+
 @filmes_bp.route('/filmes', methods=['POST'])
 def add_filme():
     # Pega os dados que o formulário enviou
