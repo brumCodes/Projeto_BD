@@ -16,20 +16,28 @@ import cinetrackLogo from '../assets/cinetrack-logo.png';
 import addLista from '../assets/add-lista2.png';
 import verInfo from '../assets/ver-info.png';
 import Tooltip from '@mui/material/Tooltip';
-
-
-const dashboardTheme = createTheme({ //fonte poppins da google
-  typography: {
-    fontFamily: 'Poppins, Roboto, Helvetica, Arial, sans-serif',
-  },
-});
+import olhoIcon from '/images/icondeolho.png';
 
 
 function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
   const [filmes, setFilmes] = useState([]);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [vistos, setVistos] = useState({}); // Movido para dentro do componente
 
+  const toggleVisto = (idFilme) => {
+    setVistos(prev => ({
+      ...prev,
+      [idFilme]: !prev[idFilme] //booleano pra indicar se o filme foi visto ou não  
+    }));
+  };
+  
+
+  const dashboardTheme = createTheme({ //fonte poppins da google
+    typography: {
+      fontFamily: 'Poppins, Roboto, Helvetica, Arial, sans-serif',
+    },
+  });
 
 
   // função para buscar filmes (todos ou filtrados)
@@ -142,18 +150,55 @@ return (
                       {filme.titulo}
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ gap: 1 , justifyContent: 'space-between'}}>
+                  <CardActions sx={{ 
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '8px 16px',
+  height: '60px' // Altura fixa para todos os cartões
+}}>
   <Tooltip title="Adicionar à lista" arrow>
-    <IconButton>
-      <img src={addLista} alt="Adicionar à lista" style={{ width: '40px', height: '40px',marginBottom: '30px', marginRight: '5px'}}
+    <IconButton sx={{ padding: 0 }}>
+      <img 
+        src={addLista} 
+        alt="Adicionar à lista" 
+        style={{ 
+          width: '40px', 
+          height: '40px'
+        }}
+      />
+    </IconButton>
+  </Tooltip>
+
+  <Tooltip title={vistos[filme.id_filme] ? "Marcado como visto" : "Marcar como visto"} arrow>
+    <IconButton 
+      onClick={() => toggleVisto(filme.id_filme)}
+      sx={{ padding: 0 }}
+    >
+      <img
+        src={olhoIcon}
+        alt="Visto"
+        style={{
+          width: '40px',
+          height: '40px',
+          filter: vistos[filme.id_filme] ? "invert(45%) sepia(85%) saturate(500%) hue-rotate(90deg)" : "none"
+        }}
       />
     </IconButton>
   </Tooltip>
 
   <Tooltip title="Ver detalhes" arrow>
-    <IconButton onClick={() => onVerDetalhes(filme)}
-      sx ={{ padding:0, width: '40px', height: '40px', borderRadius: '8px', marginLeft: '20px' }}>
-        <img src={verInfo} alt="Ver Detalhes" style={{ padding: 0, width: '40px', height: '40px', marginBottom: '30px' }}
+    <IconButton 
+      onClick={() => onVerDetalhes(filme)}
+      sx={{ padding: 0 }}
+    >
+      <img 
+        src={verInfo} 
+        alt="Ver Detalhes" 
+        style={{ 
+          width: '40px', 
+          height: '40px'
+        }}
       />
     </IconButton>
   </Tooltip>
