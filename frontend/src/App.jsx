@@ -20,15 +20,13 @@ function App() {
     console.log('Filme selecionado: ', filme);
     setFilmeSelecionado(filme);
     setView('filmeDetalhes');
-    console.log('View atualizada para', 'filmeDetalhes ');
   };
 
 const renderView = () => {
   if (usuarioLogado) {
     if (view === 'filmeDetalhes') {
-      return <FilmeDetalhesPage 
-        filme={filmeSelecionado} 
-        onVoltar={() => setView('dashboard')} 
+      console.log('Renderizando FilmeDetalhesPage com:', filmeSelecionado); 
+      return <FilmeDetalhesPage filme={filmeSelecionado} onVoltar={() => setView('dashboard')} 
       />;
     }
     return <DashboardPage 

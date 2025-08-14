@@ -1,5 +1,5 @@
 // frontend/src/pages/FilmeDetalhesPage.jsx
-import React from 'react';
+import React, {useState} from 'react';
 import { Box, Typography, Container, Rating, Button, Paper, Grid, createTheme, ThemeProvider } from '@mui/material';
 
 const theme = createTheme({
@@ -16,10 +16,24 @@ const theme = createTheme({
   }
 });
 
+
+
 function FilmeDetalhesPage({ filme, onVoltar }) {
+    const [vistos, setVistos] = useState({});
+
   if (!filme) {
+    console.log('Filme não encontrado.', filme);
     return <Typography>Filme não encontrado.</Typography>;
   }
+
+
+const toggleVisto = (id) => {
+  setVistos((prev) => ({
+    ...prev,
+    [id]: !prev[id] //booleano pra indicar se o filme foi visto ou não
+  }));
+};
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -35,7 +49,7 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter : 'blur(10px)',
-          opacity: 0.9,
+          opacity: 1,
           zIndex: -1,
           maskImage: 'linear-gradient(to right, transparent 0%, black 50%, black 70%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%, black 70%, transparent 100%)',
@@ -46,7 +60,7 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
           top: 0, right: 0,
           width: '100%',
           height: '100%',
-          background: 'linear-gradient(90deg, #0e0e0eff 30%, rgba(0, 0, 0, 0.8) 60%, rgba(18, 18, 18, 0.4) 100%)',
+          background: 'linear-gradient(90deg, #000000ff 30%, rgba(0, 0, 0, 0.8) 60%, rgba(18, 18, 18, 0.4) 100%)',
           zIndex: -1
         }
       }}>
@@ -61,7 +75,7 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
               />
             </Grid>
 
-            {/* Coluna da Direita - Informações */}
+            {/* Coluna da Direita */}
             <Grid item xs={12} md={8}>
               <Typography variant="h3" gutterBottom sx= {{fontWeight: 700, fontSize: '2.5rem'}}>{filme.titulo}</Typography>
               
