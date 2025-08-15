@@ -14,7 +14,7 @@ import AddMovieForm from '../components/AddMovieForm';
 import axios from 'axios'
 import cinetrackLogo from '../assets/cinetrack-logo.png';
 import addLista from '../assets/add-lista2.png';
-import verInfo from '../assets/ver-info.png';
+import verInfo from '/images/listbuttom.png';
 import Tooltip from '@mui/material/Tooltip';
 import olhoIcon from '/images/icondeolho.png';
 

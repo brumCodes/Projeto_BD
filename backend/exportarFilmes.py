@@ -48,6 +48,8 @@ def atualizar_poster(filme_id, novo_url):
         print(f"erro: {e}")
 
 
+
+
 if __name__ == '__main__':
     exportarFilmes()
 
