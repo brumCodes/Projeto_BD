@@ -2,6 +2,7 @@ import sqlite3
 
 # este código existe para exportar todos os filmes que são inseridos manualmente pelo site no nosso banco de dados.
 
+#função para exportar os filmes do banco de dados para sql
 def exportarFilmes():
     try:
         with sqlite3.connect('database.db') as conn:
@@ -18,7 +19,6 @@ def exportarFilmes():
                     sinopse = filme[6].replace("'", "''") if filme[6] else ''
                     url_poster = filme[7].replace("'", "''") if filme[7] else ''
                     
-                    # Gera a instrução INSERT completa
                     insert = f"INSERT INTO Filme (id_usuario, titulo, ano, duracao, diretor, genero, sinopse, url_poster) VALUES ({filme[0]}, '{titulo}', {filme[2]}, {filme[3]}, '{diretor}', '{genero}', '{sinopse}', '{url_poster}');\n"
                     f.write(insert)
             
@@ -30,6 +30,7 @@ def exportarFilmes():
         print(f"erro ao escrever no arquivo: {e}")
 
 
+# Função para atualizar o poster de um filme no banco de dados
 def atualizar_poster(filme_id, novo_url):
     try:
         with sqlite3.connect('database.db') as conn:
@@ -45,9 +46,6 @@ def atualizar_poster(filme_id, novo_url):
             
     except sqlite3.Error as e:
         print(f"erro: {e}")
-
-
-
 
 
 if __name__ == '__main__':
