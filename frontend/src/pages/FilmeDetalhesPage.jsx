@@ -269,7 +269,7 @@ return (
               </Grid>
               <Box sx={{ my: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }} />
               <Box textAlign="center">
-                <Typography variant="subtitle1" gutterBottom>Rate</Typography>
+                <Typography variant="subtitle1" gutterBottom>Nota</Typography>
                 <Rating
                   name="user-rating"
                   value={userRating}
@@ -284,7 +284,7 @@ return (
                 <Typography
                   variant="h4"
                   component="span"
-                  sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#ffffffff' }}
+                  sx={{ fontWeight: 600, fontSize: '5rem', color: '#ffffffff' }}
                 >
                   {filme.media_avaliacao || "—"}
                 </Typography>
