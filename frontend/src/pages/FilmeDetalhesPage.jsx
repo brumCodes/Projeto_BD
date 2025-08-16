@@ -1,220 +1,307 @@
 import React, { useState, useEffect } from 'react';
-import './DashboardPage.css';
-import {
-  Box, AppBar, Toolbar, Typography, Button, Container, IconButton, TextField,
-  Grid, Card, CardMedia, CardContent, CardActions
+import { 
+  Box, Typography, Container, Rating, Button, Paper, Grid, createTheme, 
+  ThemeProvider, Dialog, DialogTitle, DialogContent, TextField, DialogActions,
+  IconButton
 } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import AddIcon from '@mui/icons-material/Add';
-import PersonIcon from '@mui/icons-material/Person';
-import AddMovieForm from '../components/AddMovieForm';
+
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import WatchLaterIcon from '@mui/icons-material/WatchLater';
 import axios from 'axios';
-import Filtros from './Filtros';
-import FilterListIcon from "@mui/icons-material/FilterList";
-import cinetrackLogo from '../assets/cinetrack-logo.png';
-import addLista from '../assets/add-lista2.png';
-import verInfo from '/images/listbuttom.png';
-import Tooltip from '@mui/material/Tooltip';
-import olhoIcon from '/images/icondeolho.png';
 
-function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
-  const [filmes, setFilmes] = useState([]);
-  const [openAddModal, setOpenAddModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [listStatus, setListStatus] = useState({});
-  const [openFiltros, setOpenFiltros] = useState(false);
-  const [filtrosAtivos, setFiltrosAtivos] = useState({});
-  const [showTitle, setShowTitle] = useState(true);
 
-  const dashboardTheme = createTheme({
-    typography: {
-      fontFamily: 'Poppins, Roboto, Helvetica, Arial, sans-serif',
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    h3: {
+      fontFamily: 'Poppins',
+      fontWeight: 600
     },
-  });
-
-  const fetchFilmes = async (query = "", filtros = {}) => {
-    try {
-      let url = 'http://127.0.0.1:5000/api/filmes';
-      const params = new URLSearchParams();
-      if (query.trim()) params.append("q", query);
-      if (filtros.ano) params.append("ano", filtros.ano);
-      if (filtros.genero) params.append("genero", filtros.genero);
-      if (params.toString()) url += "?" + params.toString();
-
-      const response = await axios.get(url);
-      const filmesData = response.data;
-      setFilmes(filmesData);
-
-      const statusInicial = {};
-      filmesData.forEach(filme => {
-        statusInicial[filme.id_filme] = {
-          visto: filme.visto,
-          desejoVer: filme.desejo_ver
-        };
-      });
-      setListStatus(statusInicial);
-
-    } catch (error) {
-      console.error("Erro ao buscar filmes:", error);
+    h6: {
+      fontFamily: 'Poppins',
+      fontWeight: 500
     }
-  };
+  }
+});
 
-  const handleToggleLista = async (filmeId, nomeDaLista) => {
-    const isCurrentlyOnList = nomeDaLista === 'Vistos'
-      ? listStatus[filmeId]?.visto
-      : listStatus[filmeId]?.desejoVer;
 
-    const endpoint = isCurrentlyOnList ? 'remover_filme' : 'adicionar_filme';
+function FilmeDetalhesPage({ filme, onVoltar }) {
+  const [userRating, setUserRating] = useState(0); 
+  const [resenha, setResenha] = useState(""); 
+  const [openResenhaModal, setOpenResenhaModal] = useState(false); 
+  const [isWatched, setIsWatched] = useState(false);
+  const [isOnWatchlist, setIsOnWatchlist] = useState(false);
 
-    try {
-      const response = await fetch(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filme_id: filmeId, nome_lista: nomeDaLista }),
-      });
-
-      if (response.ok) {
-        setListStatus(prev => ({
-          ...prev,
-          [filmeId]: {
-            ...prev[filmeId],
-            [nomeDaLista === 'Vistos' ? 'visto' : 'desejoVer']: !isCurrentlyOnList
-          }
-        }));
-      } else {
-        const data = await response.json();
-        console.error(`Erro: ${data.message}`);
-      }
-    } catch (error) {
-      console.error("Erro de conexão.", error);
-    }
-  };
-
-  const handleMovieAdded = () => { 
-      setOpenAddModal(false);
-  };
-  
-  const isSearchActive = searchTerm.trim() || Object.keys(filtrosAtivos).length > 0;
-
+  // UseEffect para carregar o status do filme do banco de dados
   useEffect(() => {
-    if (isSearchActive) {
-      const titleDelay = setTimeout(() => {
-        setShowTitle(false);
-      }, 500);
-      return () => clearTimeout(titleDelay);
-    } else {
-      setShowTitle(true);
-    }
+    const fetchMovieStatus = async () => {
+        if (!filme || !filme.id_filme) {
+            console.log('Filme não definido, pulando a busca de status.');
+            return;
+        }
+        try {
+            console.log(`Buscando status para o filme ID: ${filme.id_filme}...`);
+            const response = await axios.get(`http://127.0.0.1:5000/api/filmes/${filme.id_filme}/status`);
+            
+            console.log('Dados recebidos da API:', response.data);
+            
+            if (response.data) {
+                // CORREÇÃO: Usando !! para garantir que o valor seja um booleano (true ou false)
+                setIsWatched(!!response.data.visto);
+                setIsOnWatchlist(!!response.data.desejo_ver);
+                console.log(`Estado setado: Assistido = ${!!response.data.visto}, Watchlist = ${!!response.data.desejo_ver}`);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar status do filme:", error);
+        }
+    };
+    fetchMovieStatus();
+  }, [filme]); // O useEffect vai rodar toda vez que o "filme" mudar
 
-    const searchDelay = setTimeout(() => {
-      fetchFilmes(searchTerm, filtrosAtivos);
-    }, 500);
-    return () => clearTimeout(searchDelay);
-  }, [searchTerm, filtrosAtivos, isSearchActive]);
+  if (!filme) {
+    console.log('Filme não encontrado.', filme);
+    return <Typography>Filme não encontrado.</Typography>;
+  }
+
+  const handleRatingChange = (event, newValue) => {
+    setUserRating(newValue);
+    if (newValue > 0) {
+      setOpenResenhaModal(true);
+    }
+  };
+
+  const handleCloseResenhaModal = () => {
+    setOpenResenhaModal(false);
+  };
+
+  const handleSalvarResenha = () => {
+    console.log(`Filme: ${filme.titulo}, Nota: ${userRating}, Resenha: ${resenha}`);
+    setOpenResenhaModal(false);
+    setResenha("");
+  };
+
+  const toggleListaAPI = async (filmeId, nomeDaLista) => {
+      const isCurrentlyOnList = nomeDaLista === 'Vistos' ? isWatched : isOnWatchlist;
+      const endpoint = isCurrentlyOnList ? 'remover_filme' : 'adicionar_filme';
+      
+      try {
+          const response = await axios.post(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
+              filme_id: filmeId,
+              nome_lista: nomeDaLista
+          });
+
+          if (response.status >= 200 && response.status < 300) {
+              if (nomeDaLista === 'Vistos') {
+                  setIsWatched(prev => !prev);
+              } else {
+                  setIsOnWatchlist(prev => !prev);
+              }
+          }
+      } catch (error) {
+          console.error("Erro ao atualizar lista:", error);
+      }
+  };
+
+  const handleWatchClick = () => {
+    toggleListaAPI(filme.id_filme, 'Vistos');
+  };
+
+  const handleWatchlistClick = () => {
+    toggleListaAPI(filme.id_filme, 'Desejo Ver');
+  };
 
   return (
-    <ThemeProvider theme={dashboardTheme}>
-      <CssBaseline />
-      <Box className="dashboard-container">
-        <AppBar position="static" sx={{ backgroundColor: '#292828', color: 'white' }}>
-          <Toolbar sx={{ color: 'white' }}>
-            <img src={cinetrackLogo} alt="Cinetrack" style={{ height: '35px', backgroundColor: 'transparent' }} />
-            <Box className="dashboard-search" sx={{ flexGrow: 1, maxWidth: 300, ml: 4 }}>
-              <TextField
-                fullWidth variant="standard" placeholder="Pesquisar filmes..."
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{ disableUnderline: true }}
-                sx={{ '& .MuiInputBase-input': { padding: '8px', color: 'white' } }}
-              />
-            </Box>
-            <Box sx={{ flexGrow: 1, ml: 2 }}>
-              <Button color="inherit" startIcon={<FilterListIcon />} onClick={() => setOpenFiltros(true)}>
-                Filtros
-              </Button>
-            </Box>
-            <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }} onClick={() => setOpenAddModal(true)}>
-              Add Filme
-            </Button>
-            <IconButton color="inherit"><PersonIcon /></IconButton>
-            <Button color="inherit" onClick={onLogout}>Sair</Button>
-          </Toolbar>
-        </AppBar>
-
-        <Container className="dashboard-main">
-          {isSearchActive ? (
-            <Typography variant="h4" gutterBottom align="center" sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
-              Resultados encontrados
-            </Typography>
-          ) : (
-            showTitle && (
-              <Typography variant="h4" gutterBottom align="center" sx={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                Catálogo de filmes
-              </Typography>
-            )
-          )}
-
-          {filmes.length === 0 ? (
-            <Box display="flex" justifyContent="center" alignItems="center" mt={4}>
-              <Typography variant="h6" color="text.secondary">
-                Nenhum resultado encontrado.
-              </Typography>
-            </Box>
-          ) : (
-            <Box>
-              <Grid container spacing={3} justifyContent="center">
-                {filmes.map((filme) => (
-                  <Grid item key={filme.id_filme}>
-                    <Card className="dashboard-card" sx={{ backgroundColor: '#303540', color: 'white'}}>
-                      <CardMedia
-                        className="dashboard-card-media" component="img" image={filme.url_poster} title={filme.titulo}
-                      />
-                      <CardContent sx={{ flexGrow: 1, padding: '4px', minHeight: '30px', marginLeft: '4px', marginTop: '6px' }}>
-                        <Typography gutterBottom variant="h5" component="div" className="dashboard-card-title" sx={{ fontSize: '1.06rem', fontWeight: '400', height: '2.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop : '2px' }}>
-                          {filme.titulo}
-                        </Typography>
-                      </CardContent>
-                      <CardActions sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', height: '60px' }}>
-                        <Tooltip title={listStatus[filme.id_filme]?.desejoVer ? "Remover da Watchlist" : "Adicionar à Watchlist"} arrow>
-                          <IconButton sx={{ padding: 0 }} onClick={() => handleToggleLista(filme.id_filme, 'Desejo Ver')}>
-                            <img src={addLista} alt="Adicionar à lista" style={{ width: '40px', height: '40px', filter: listStatus[filme.id_filme]?.desejoVer ? 'opacity(0.4)' : 'none' }} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={listStatus[filme.id_filme]?.visto ? "Remover de 'Vistos'" : "Marcar como visto"} arrow>
-                          <IconButton onClick={() => handleToggleLista(filme.id_filme, 'Vistos')} sx={{ padding: 0 }}>
-                            <img src={olhoIcon} alt="Visto" style={{ width: '40px', height: '40px', filter: listStatus[filme.id_filme]?.visto ? "invert(45%) sepia(85%) saturate(500%) hue-rotate(90deg)" : "none" }} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Ver detalhes" arrow>
-                          <IconButton onClick={() => onVerDetalhes(filme)} sx={{ padding: 0 }}>
-                            <img src={verInfo} alt="Ver Detalhes" style={{ width: '40px', height: '40px' }} />
-                          </IconButton>
-                        </Tooltip>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
+    <ThemeProvider theme={theme}>
+      <Box sx={{
+        minHeight: '100vh',
+        position: 'relative',
+        color: 'white',
+        padding: 4,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '60%',
+          height: '100%',
+          backgroundImage: `url(${filme.url_poster})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(5px)',
+          opacity: 1,
+          zIndex: -1,
+          maskImage: 'linear-gradient(to right, transparent 0%, black 50%, black 70%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%, black 70%, transparent 100%)',
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(90deg, #000000ff 30%, rgba(0, 0, 0, 0.8) 60%, rgba(18, 18, 18, 0.4) 100%)',
+          zIndex: -1,
+        },
+      }}>
+        <Container sx={{ position: 'relative', zIndex: 1, display: { md: 'flex' } }}>
+          <Box sx={{ width: { md: '66.66%' }, pr: { md: 4 } }}>
+            <Grid container spacing={4} sx={{ alignItems: 'flex-start', mt: 10}}>
+              <Grid item xs={12} sm={4}>
+                <img
+                  src={filme.url_poster}
+                  alt={filme.titulo}
+                  style={{ width: '100%', borderRadius: '10px', maxWidth: '260px' }}
+                />
               </Grid>
-            </Box>
-          )}
+              <Grid item xs={12} sm={8}>
+                <Typography variant="h3" gutterBottom sx={{ fontWeight: 700, fontSize: '2.5rem' }}>
+                  {filme.titulo}
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h6" component="span" sx={{ mr: 1 }}>
+                    {filme.ano}
+                  </Typography>
+                  <Typography variant="h6" component="span" sx={{ mr: 1 }}>
+                    • {filme.duracao} min
+                  </Typography>
+                  <Typography variant="h6" component="span">
+                    • {filme.genero}
+                  </Typography>
+                </Box>
+                <Typography variant="h6" gutterBottom>Diretor:</Typography>
+                <Typography paragraph>{filme.diretor}</Typography>
+                <Typography variant="h6" gutterBottom>Sinopse:</Typography>
+                <Typography paragraph>{filme.sinopse}</Typography>
+                <Box sx={{ mt: 4 }}>
+                  <Rating
+                    value={filme.media_avaliacao || 0}
+                    readOnly
+                    precision={0.5}
+                    sx={{ color: 'gold' }}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+            <Button
+              variant="contained"
+              onClick={onVoltar}
+              sx={{ mt: 4, backgroundColor: '#c343ddff', '&:hover': { backgroundColor: '#5c0f74ff' } }}
+            >
+              Voltar
+            </Button>
+          </Box>
+          <Box 
+            sx={{ 
+              width: { md: '33.33%' }, 
+              display: { xs: 'block', md: 'flex' }, 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              mt: { xs: 4, md: -16 },
+              ml: {md: 20}
+            }}> 
+            <Paper
+              elevation={6}
+              sx={{
+                p: 2,
+                backgroundColor: '#292828',
+                color: 'white',
+                borderRadius: '10px',
+                width: '100%',
+                maxWidth: '300px',
+                minHeight: '360px',
+              }}
+            >
+              <Grid container justifyContent="space-around" sx={{ mb: 2 }}>
+                <Grid item sx={{ textAlign: 'center' }}>
+                  <IconButton 
+                    onClick={handleWatchClick}
+                    sx={{ color: isWatched ? '#27df73ff' : 'inherit'}}
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+                  <Typography 
+                    variant="caption"
+                    sx={{ color: isWatched ? '#27df73ff' : 'inherit',
+                      fontSize: '0.9rem',
+                     }}
+                  >
+                    Assistido
+                  </Typography>
+                </Grid>
+                <Grid item sx={{ textAlign: 'center' }}>
+                  <IconButton 
+                    onClick={handleWatchlistClick} 
+                    sx={{ color: isOnWatchlist ? '#e9e96cff' : 'inherit' }}
+                  >
+                    <WatchLaterIcon />
+                  </IconButton>
+                  <Typography 
+                    variant="caption"
+                    sx={{ color: isOnWatchlist ? '#e9e96cff' : 'inherit',
+                      fontSize: '0.8rem',
+                    }}
+                  >
+                    Watchlist
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Box sx={{ my: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }} />
+              <Box textAlign="center">
+                <Typography variant="subtitle1" gutterBottom>Rate</Typography>
+                <Rating
+                  name="user-rating"
+                  value={userRating}
+                  onChange={handleRatingChange}
+                  precision={0.5}
+                  sx={{ color: '#25ec78ff', fontSize: '2.5rem' }}
+                />
+              </Box>
+              <Box sx={{ my: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }} />
+              <Box textAlign="center" sx={{ mt: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>Média de Avaliação</Typography>
+                <Typography
+                  variant="h4"
+                  component="span"
+                  sx={{ fontWeight: 700, fontSize: '2.5rem', color: '#ffffffff' }}
+                >
+                  {filme.media_avaliacao || "—"}
+                </Typography>
+              </Box>
+            </Paper>
+          </Box>
         </Container>
-        <AddMovieForm
-          open={openAddModal}
-          onClose={() => setOpenAddModal(false)}
-          onSuccess={handleMovieAdded}
-        />
-        <Filtros
-          open={openFiltros}
-          onClose={() => setOpenFiltros(false)}
-          filtrosAtivos={filtrosAtivos}
-          onApply={(filtrosSelecionados) => {
-            setFiltrosAtivos(filtrosSelecionados);
-            setOpenFiltros(false);
-          }}
-        />
+        <Dialog open={openResenhaModal} onClose={handleCloseResenhaModal}>
+          <DialogTitle>Deixe sua resenha para {filme.titulo}</DialogTitle>
+          <DialogContent>
+            <Rating
+              value={userRating}
+              readOnly
+              precision={0.5}
+              sx={{ mb: 2, color: '#cf4fe9ff' }}
+            />
+            <TextField
+              autoFocus
+              margin="dense"
+              id="resenha"
+              label="Sua Resenha"
+              type="text"
+              fullWidth
+              multiline
+              rows={4}
+              variant="standard"
+              value={resenha}
+              onChange={(e) => setResenha(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseResenhaModal}>Cancelar</Button>
+            <Button onClick={handleSalvarResenha}>Salvar</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ThemeProvider>
   );
 }
 
-export default DashboardPage;
+export default FilmeDetalhesPage;

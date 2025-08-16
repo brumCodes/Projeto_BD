@@ -1,52 +1,81 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import FilmeDetalhesPage from './pages/FilmeDetalhesPage';
 import './App.css';
 
-function App() {
-  const [usuarioLogado, setUsuarioLogado] = useState(null);
-  const [view, setView] = useState('login'); 
-  const [filmeSelecionado, setFilmeSelecionado] = useState(null);
+// Componente principal com a lógica de roteamento
+function MainApp() {
+    const [usuarioLogado, setUsuarioLogado] = useState(null);
+    const [filmeSelecionado, setFilmeSelecionado] = useState(null);
+    const navigate = useNavigate();
 
-  const handleLoginSuccess = (dadosDoUsuario) => {
-    setUsuarioLogado(dadosDoUsuario);
-    setView('dashboard');
-  };
+    const handleLoginSuccess = (dadosDoUsuario) => {
+        setUsuarioLogado(dadosDoUsuario);
+        navigate('/dashboard');
+    };
 
+    // Esta função agora passa o filme e navega
     const handleVerDetalhes = (filme) => {
-    console.log('Filme selecionado: ', filme);
-    setFilmeSelecionado(filme);
-    setView('filmeDetalhes');
-  };
+        setFilmeSelecionado(filme);
+        navigate('/filmeDetalhes');
+    };
 
-const renderView = () => {
-  if (usuarioLogado) {
-    if (view === 'filmeDetalhes') {
-      console.log('Renderizando FilmeDetalhesPage com:', filmeSelecionado); 
-      return <FilmeDetalhesPage filme={filmeSelecionado} onVoltar={() => setView('dashboard')} 
-      />;
-    }
-    return <DashboardPage 
-      usuario={usuarioLogado} 
-      onVerDetalhes={handleVerDetalhes}
-      onLogout={() => {
+    const handleLogout = () => {
         setUsuarioLogado(null);
-        setView('login');
-      }} 
-    />;
-  }
-  if (view === 'login') {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={() => setView('register')} />;
-  }
-  if (view === 'register') {
-    return <RegisterPage onSwitchToLogin={() => setView('login')} />;
-  }
-};
+        navigate('/');
+    };
 
-  return <div>{renderView()}</div>;
+    return (
+        <Routes>
+            <Route path="/" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route 
+                path="/dashboard" 
+                element={
+                    usuarioLogado ? (
+                        // A prop onVerDetalhes é passada aqui
+                        <DashboardPage 
+                            usuario={usuarioLogado} 
+                            onVerDetalhes={handleVerDetalhes}
+                            onLogout={handleLogout}
+                        />
+                    ) : (
+                        <LoginPage onLoginSuccess={handleLoginSuccess} />
+                    )
+                } 
+            />
+            <Route 
+                path="/filmeDetalhes" 
+                element={
+                    filmeSelecionado ? (
+                        <FilmeDetalhesPage 
+                            key={filmeSelecionado.id_filme}
+                            filme={filmeSelecionado} 
+                            onVoltar={() => navigate('/dashboard')}
+                        />
+                    ) : (
+                        <DashboardPage 
+                            usuario={usuarioLogado} 
+                            onVerDetalhes={handleVerDetalhes}
+                            onLogout={handleLogout}
+                        />
+                    )
+                } 
+            />
+        </Routes>
+    );
+}
+
+// O componente App.js deve apenas envolver o MainApp com o Router
+function App() {
+    return (
+        <Router>
+            <MainApp />
+        </Router>
+    );
 }
 
 export default App;

@@ -1,5 +1,3 @@
-# backend/routes/listas.py
-
 from flask import Blueprint, request, jsonify
 import sqlite3
 from db import get_db_connection
