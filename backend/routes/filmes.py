@@ -4,8 +4,10 @@ import sqlite3
 import os
 from flask import current_app
 from db import get_db_connection
+from flask_cors import CORS
 
 filmes_bp = Blueprint('filmes', __name__)
+CORS(filmes_bp)
 
 @filmes_bp.route('/filmes', methods=['GET'])
 def get_filmes():
@@ -93,7 +95,6 @@ def add_filme():
         return jsonify({"error": str(e)}), 500
 
 
-#nova rota para buscar o status do filme em relação as listas
 @filmes_bp.route('/filmes/<int:filme_id>/status', methods=['GET'])
 def get_filme_status(filme_id):
     usuario_id = 1
@@ -121,3 +122,64 @@ def get_filme_status(filme_id):
         "visto": bool(visto_result),
         "desejo_ver": bool(desejo_ver_result)
     })
+
+# NOVO: Rota para salvar a avaliação de um filme
+@filmes_bp.route('/filmes/<int:filme_id>/avaliacao', methods=['POST'])
+def add_avaliacao(filme_id):
+    data = request.json
+    nota = data.get('nota')
+    resenha = data.get('resenha') # Continua 'resenha' aqui, pois é o nome enviado do frontend
+    usuario_id = 1  # ID do usuário, por enquanto fixo
+
+    if not nota:
+        return jsonify({"error": "Nota é obrigatória"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Verifica se já existe uma avaliação do usuário para este filme
+        cursor.execute(
+            "SELECT COUNT(*) FROM Avaliacao WHERE id_filme = ? AND id_usuario = ?",
+            (filme_id, usuario_id)
+        )
+        existe_avaliacao = cursor.fetchone()[0]
+
+        if existe_avaliacao > 0:
+            # Se a avaliação já existe, atualiza
+            # Alteração: 'resenha' -> 'comentario'
+            cursor.execute(
+                "UPDATE Avaliacao SET nota = ?, comentario = ? WHERE id_filme = ? AND id_usuario = ?",
+                (nota, resenha, filme_id, usuario_id)
+            )
+        else:
+            # Caso contrário, insere uma nova avaliação
+            # Alteração: 'resenha' -> 'comentario'
+            cursor.execute(
+                "INSERT INTO Avaliacao (id_filme, id_usuario, nota, comentario) VALUES (?, ?, ?, ?)",
+                (filme_id, usuario_id, nota, resenha)
+            )
+
+        # Recalcular a média de avaliação do filme
+        avg_result = conn.execute(
+            "SELECT AVG(nota) FROM Avaliacao WHERE id_filme = ?",
+            (filme_id,)
+        ).fetchone()
+
+        nova_media = round(avg_result[0], 2) if avg_result[0] is not None else 0
+
+        # Atualizar a média na tabela Filme
+        cursor.execute(
+            "UPDATE Filme SET media_avaliacao = ? WHERE id_filme = ?",
+            (nova_media, filme_id)
+        )
+
+        conn.commit()
+        return jsonify({"message": "Resenha e nota salvas com sucesso!", "media_atualizada": nova_media}), 201
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Erro ao salvar avaliação: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()

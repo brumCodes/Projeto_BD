@@ -74,10 +74,31 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
     setOpenResenhaModal(false);
   };
 
-  const handleSalvarResenha = () => {
-    console.log(`Filme: ${filme.titulo}, Nota: ${userRating}, Resenha: ${resenha}`);
-    setOpenResenhaModal(false);
-    setResenha("");
+  const handleSalvarResenha = async () => {
+    if (!userRating) {
+      alert("Por favor, selecione uma nota antes de salvar a resenha.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:5000/api/filmes/${filme.id_filme}/avaliacao`,
+        {
+          nota: userRating,
+          resenha: resenha,
+        }
+      );
+
+      console.log('Resposta do backend:', response.data);
+      // Aqui você pode atualizar o estado do filme se a média de avaliação mudou
+      // Por exemplo: setFilme({ ...filme, media_avaliacao: response.data.media_atualizada });
+      
+      handleCloseResenhaModal();
+      setResenha("");
+    } catch (error) {
+      console.error("Erro ao salvar a resenha:", error.response ? error.response.data : error.message);
+      alert("Erro ao salvar a resenha. Tente novamente.");
+    }
   };
 
   const toggleListaAPI = async (filmeId, nomeDaLista) => {
@@ -110,7 +131,7 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
     toggleListaAPI(filme.id_filme, 'Desejo Ver');
   };
 
-  return (
+return (
     <ThemeProvider theme={theme}>
       <Box sx={{
         minHeight: '100vh',
@@ -271,14 +292,69 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
             </Paper>
           </Box>
         </Container>
-        <Dialog open={openResenhaModal} onClose={handleCloseResenhaModal}>
-          <DialogTitle>Deixe sua resenha para {filme.titulo}</DialogTitle>
+        <Dialog
+          open={openResenhaModal}
+          onClose={handleCloseResenhaModal}
+          sx={{
+            '& .MuiPaper-root': {
+              backgroundColor: '#252525ff',
+              color: '#ffffff',
+              borderRadius: '8px',
+              width: '450px',
+              height: '450px',
+              maxWidth: 'none',
+              padding: '10px',
+            },
+            '& .MuiDialogTitle-root': {
+              padding: '16px',
+              fontWeight: 600,
+              borderBottom: '1px solid #181818ff',
+            },
+            '& .MuiDialogContent-root': {
+              padding: '16px',
+            },
+            '& .MuiDialogActions-root': {
+              padding: '8px 16px',
+              borderTop: '1px solid #0e0e0eff',
+              justifyContent: 'flex-end',
+            },
+            '& .MuiRating-root': {
+              color: '#60ec6cff',
+            },
+            '& .MuiTextField-root': {
+              backgroundColor: '#252525ff',
+              borderRadius: '4px',
+              // Estilo para o texto digitado
+              '& .MuiInputBase-input': {
+                color: '#ffffff', 
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#60ec6cff',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#a3f7a3ff',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#a3f7a3ff',
+              },
+              '& .MuiInputLabel-root': {
+                color: '#aaaaaaff',
+              },
+            },
+          }}
+        >
+          <DialogTitle
+          sx ={{ color : '#ffffff'}}
+          >Envie sua review para {filme.titulo} </DialogTitle>
           <DialogContent>
             <Rating
               value={userRating}
               readOnly
               precision={0.5}
-              sx={{ mb: 2, color: '#cf4fe9ff' }}
+              sx={{ 
+                mb: 3,
+                fontSize: '2.4rem'
+              }}
             />
             <TextField
               autoFocus
@@ -288,15 +364,27 @@ function FilmeDetalhesPage({ filme, onVoltar }) {
               type="text"
               fullWidth
               multiline
-              rows={4}
-              variant="standard"
+              rows={6}
+              variant="outlined"
               value={resenha}
               onChange={(e) => setResenha(e.target.value)}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseResenhaModal}>Cancelar</Button>
-            <Button onClick={handleSalvarResenha}>Salvar</Button>
+            <Button onClick={handleCloseResenhaModal} sx={{ color: '#ffffff' }}>Cancelar</Button>
+            <Button 
+              onClick={handleSalvarResenha} 
+              variant="contained" 
+              sx={{ 
+                backgroundColor: '#60ec6cff', 
+                '&:hover': {
+                  backgroundColor: '#a3f7a3ff',
+                },
+                color: '#121212'
+              }}
+            >
+              Salvar
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>

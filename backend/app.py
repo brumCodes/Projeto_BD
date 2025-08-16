@@ -6,7 +6,7 @@ from routes.filmes import filmes_bp
 from routes.listas import listas_bp
 
 def create_app():
-    #Cria a instância da aplicação Flask
+    
     app = Flask(__name__)
     CORS(app)
 
