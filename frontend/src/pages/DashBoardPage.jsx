@@ -18,7 +18,8 @@ import verInfo from '/images/listbuttom.png';
 import Tooltip from '@mui/material/Tooltip';
 import olhoIcon from '/images/icondeolho.png';
 
-function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
+
+function DashboardPage({ usuario, onLogout, onVerDetalhes, onVerPerfil }) {
   const [filmes, setFilmes] = useState([]);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,98 +38,98 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
   const fetchFilmes = async (query = "", filtros = {}, usuario) => {
     //verificação para garantir que o usuário está logado
     if (!usuario || !usuario.id) {
-        setFilmes([]); //limpa a lista de filmes se não houver usuario logado
-        return;
+      setFilmes([]); //limpa a lista de filmes se não houver usuario logado
+      return;
     }
 
     try {
-        let url = 'http://127.0.0.1:5000/api/filmes';
+      let url = 'http://127.0.0.1:5000/api/filmes';
 
-        const params = new URLSearchParams();
-        
-        // Adiciona o ID do usuário aos parâmetros
-        params.append("usuario_id", usuario.id); 
+      const params = new URLSearchParams();
 
-        if (query.trim()) params.append("q", query);
-        if (filtros.ano) params.append("ano", filtros.ano);
-        if (filtros.genero) params.append("genero", filtros.genero);
+      // adiciona o id do usuário aos parâmetros
+      params.append("usuario_id", usuario.id);
 
-        if (params.toString()) url += "?" + params.toString();
+      if (query.trim()) params.append("q", query);
+      if (filtros.ano) params.append("ano", filtros.ano);
+      if (filtros.genero) params.append("genero", filtros.genero);
 
-        const response = await axios.get(url);
-        const filmesData = response.data;
-        setFilmes(filmesData);
+      if (params.toString()) url += "?" + params.toString();
 
-        const statusInicial = {};
-        filmesData.forEach(filme => {
-            statusInicial[filme.id_filme] = {
-                visto: filme.visto,
-                desejoVer: filme.desejo_ver
-            };
-        });
-        setListStatus(statusInicial);
+      const response = await axios.get(url);
+      const filmesData = response.data;
+      setFilmes(filmesData);
+
+      const statusInicial = {};
+      filmesData.forEach(filme => {
+        statusInicial[filme.id_filme] = {
+          visto: filme.visto,
+          desejoVer: filme.desejo_ver
+        };
+      });
+      setListStatus(statusInicial);
 
     } catch (error) {
-        console.error("Erro ao buscar filmes:", error);
+      console.error("Erro ao buscar filmes:", error);
     }
-};
+  };
 
 
   const handleToggleLista = async (filmeId, nomeDaLista) => {
-    // Adiciona a verificação do usuário
+    // adiciona a verificação do usuário
     if (!usuario || !usuario.id) {
-        alert("Você precisa estar logado para adicionar filmes à sua lista.");
-        return;
+      alert("você precisa estar logado para adicionar filmes à sua lista.");
+      return;
     }
 
     const isCurrentlyOnList = nomeDaLista === 'Vistos'
-        ? listStatus[filmeId]?.visto
-        : listStatus[filmeId]?.desejoVer;
+      ? listStatus[filmeId]?.visto
+      : listStatus[filmeId]?.desejoVer;
 
     const endpoint = isCurrentlyOnList ? 'remover_filme' : 'adicionar_filme';
 
     try {
-        const response = await fetch(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                filme_id: filmeId, 
-                nome_lista: nomeDaLista,
-                id_usuario: usuario.id //envia o id do usuario
-            }),
-        });
+      const response = await fetch(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filme_id: filmeId,
+          nome_lista: nomeDaLista,
+          id_usuario: usuario.id // envia o id do usuario
+        }),
+      });
 
-        if (response.ok) {
-            setListStatus(prev => ({
-                ...prev,
-                [filmeId]: {
-                    ...prev[filmeId],
-                    [nomeDaLista === 'Vistos' ? 'visto' : 'desejoVer']: !isCurrentlyOnList
-                }
-            }));
-        } else {
-            const data = await response.json();
-            console.error(`Erro: ${data.message}`);
-        }
+      if (response.ok) {
+        setListStatus(prev => ({
+          ...prev,
+          [filmeId]: {
+            ...prev[filmeId],
+            [nomeDaLista === 'Vistos' ? 'visto' : 'desejoVer']: !isCurrentlyOnList
+          }
+        }));
+      } else {
+        const data = await response.json();
+        console.error(`erro: ${data.message}`);
+      }
     } catch (error) {
-        console.error("Erro de conexão.", error);
+      console.error("erro de conexão.", error);
     }
-};
-
-
-  const handleMovieAdded = () => { 
-      setOpenAddModal(false);
   };
 
-useEffect(() => {
+
+  const handleMovieAdded = () => {
+    setOpenAddModal(false);
+  };
+
+  useEffect(() => {
     const delayDebounce = setTimeout(() => {
-        console.log("Chamando fetchFilmes com busca:", searchTerm, "e filtros:", filtrosAtivos);
-        fetchFilmes(searchTerm, filtrosAtivos, usuario);
+      console.log("chamando fetchfilmes com busca:", searchTerm, "e filtros:", filtrosAtivos);
+      fetchFilmes(searchTerm, filtrosAtivos, usuario);
     }, 200);
     return () => clearTimeout(delayDebounce);
   }, [searchTerm, filtrosAtivos, usuario]);
 
-    return (
+  return (
     <ThemeProvider theme={dashboardTheme}>
       <CssBaseline />
       <Box className="dashboard-container">
@@ -137,7 +138,7 @@ useEffect(() => {
             <img src={cinetrackLogo} alt="Cinetrack" style={{ height: '35px', backgroundColor: 'transparent' }} />
             <Box className="dashboard-search" sx={{ flexGrow: 1, maxWidth: 300, ml: 4 }}>
               <TextField
-                fullWidth variant="standard" placeholder="Pesquisar filmes..."
+                fullWidth variant="standard" placeholder="pesquisar filmes..."
                 value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                 InputProps={{ disableUnderline: true}}
                 sx={{ '& .MuiInputBase-input': { padding: '8px', color: 'white' } }}
@@ -146,14 +147,17 @@ useEffect(() => {
             <Box sx={{ flexGrow: 1, ml: 2 }}>
               <Button color="inherit" startIcon={<FilterListIcon />} onClick={() => setOpenFiltros(true)}
               sx ={{ color: '#d1d1d1ff'}}
-              > 
+              >
                 Filtros
               </Button>
             </Box>
             <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }} onClick={() => setOpenAddModal(true)}>
               Add Filme
             </Button>
-            <IconButton color="inherit"><PersonIcon /></IconButton>
+            {/* alteracao: adicione a propriedade onclick que chama a nova funcao */}
+            <IconButton color="inherit" onClick={onVerPerfil}>
+              <PersonIcon />
+            </IconButton>
             <Button color="inherit" onClick={onLogout}>Sair</Button>
           </Toolbar>
         </AppBar>

@@ -4,7 +4,9 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import FilmeDetalhesPage from './pages/FilmeDetalhesPage';
+import ProfilePage from './pages/ProfilePage';
 import './App.css';
+
 
 function MainApp() {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
@@ -35,6 +37,10 @@ function MainApp() {
         navigate('/');
     };
 
+    const handleVerPerfil = () => {
+    navigate('/perfil');
+};
+
     return (
         <Routes>
             <Route 
@@ -53,6 +59,7 @@ function MainApp() {
                             usuario={usuarioLogado} 
                             onVerDetalhes={handleVerDetalhes}
                             onLogout={handleLogout}
+                            onVerPerfil={handleVerPerfil}
                         />
                     ) : (
                         <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
@@ -75,6 +82,21 @@ function MainApp() {
                             onVerDetalhes={handleVerDetalhes}
                             onLogout={handleLogout}
                         />
+                    )
+                } 
+            />
+            <Route 
+            path="/perfil" 
+            element={
+                usuarioLogado ? (
+                    <ProfilePage 
+                            usuario={usuarioLogado}
+                            onLogout={handleLogout}
+                            onVerDetalhes={handleVerDetalhes} 
+                            onReturnToDashboard={() => navigate('/dashboard')}
+                        />
+                    ) : (
+                        <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
                     )
                 } 
             />
