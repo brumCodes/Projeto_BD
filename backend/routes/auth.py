@@ -1,13 +1,8 @@
-# backend/routes/auth.py
-
 from flask import Blueprint, request, jsonify
 import sqlite3
 
-
-#Criamos o Blueprint. 'auth' é o nome do blueprint.
 auth_bp = Blueprint('auth', __name__)
 
-# Função auxiliar para pegar a conexão com o banco
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
@@ -24,11 +19,15 @@ def login():
         return jsonify({"message": "Nome de usuário e senha são obrigatórios!"}), 400
 
     conn = get_db_connection()
-    query = "SELECT * FROM usuario WHERE nome_usuario = ? AND senha = ?"
-    user = conn.execute(query, (username, password)).fetchone()
+
+    user = conn.execute(
+        "SELECT id, nome_usuario, senha FROM usuario WHERE nome_usuario = ?",
+        (username,)
+    ).fetchone()
     conn.close()
 
-    if user:
+    # o login verifica a senha depois de buscar o nome de usuário
+    if user and user['senha'] == password:
         return jsonify({
             "message": "Login bem-sucedido!",
             "usuario": {
@@ -38,6 +37,8 @@ def login():
         })
     else:
         return jsonify({"message": "Nome de usuário ou senha inválidos"}), 401
+
+
     
 @auth_bp.route('/register', methods=['POST'])
 def register():

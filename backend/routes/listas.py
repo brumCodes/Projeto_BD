@@ -9,10 +9,10 @@ def adicionar_filme_a_lista():
     data = request.get_json()
     filme_id = data.get('filme_id')
     nome_lista = data.get('nome_lista')
-    id_usuario = 1 
+    id_usuario = data.get('id_usuario') 
 
-    if not filme_id or not nome_lista:
-        return jsonify({"message": "ID do filme e nome da lista são obrigatórios"}), 400
+    if not filme_id or not nome_lista or not id_usuario:
+        return jsonify({"message": "ID do filme, nome da lista e ID do usuário são obrigatórios"}), 400
 
     conn = get_db_connection()
     lista = conn.execute(
@@ -50,10 +50,11 @@ def remover_filme_da_lista():
     data = request.get_json()
     filme_id = data.get('filme_id')
     nome_lista = data.get('nome_lista')
-    id_usuario = 1 # Provisório
 
-    if not filme_id or not nome_lista:
-        return jsonify({"message": "ID do filme e nome da lista são obrigatórios"}), 400
+    id_usuario = data.get('id_usuario') 
+
+    if not filme_id or not nome_lista or not id_usuario:
+        return jsonify({"message": "ID do filme, nome da lista e ID do usuário são obrigatórios"}), 400
 
     conn = get_db_connection()
     conn.execute(
@@ -67,7 +68,12 @@ def remover_filme_da_lista():
 
 @listas_bp.route('/listas/status-filme/<int:filme_id>', methods=['GET'])
 def get_status_filme(filme_id):
-    id_usuario = 1
+
+    id_usuario = request.args.get('usuario_id', type=int)
+
+    if not id_usuario:
+        return jsonify({"error": "ID do usuário não fornecido"}), 400
+
     conn = get_db_connection()
     visto = conn.execute(
         'SELECT 1 FROM Filme_Lista fl JOIN Lista l ON fl.id_lista = l.id_lista WHERE fl.id_filme = ? AND l.id_usuario = ? AND l.nome_lista = ?',

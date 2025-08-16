@@ -12,7 +12,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const generos = ["Ação", "Comédia", "Drama", "Ficção Científica", "Terror", "Animação", "Romance", "Aventura"];
+const generos = ["Ação", "Comédia", "Drama", "Ficção Científica", "Terror", "Animação", "Romance", "Aventura", "Suspense", "Musical"];
 
 function Filtros({ open, onClose, onApply, filtrosAtivos }) {
   const [ano, setAno] = useState(filtrosAtivos.ano || "");

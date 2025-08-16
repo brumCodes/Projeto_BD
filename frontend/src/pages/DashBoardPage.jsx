@@ -34,77 +34,99 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
 
   const isSearchActive = searchTerm.trim() || Object.keys(filtrosAtivos).length > 0;
 
-  const fetchFilmes = async (query = "", filtros = {}) => {
+  const fetchFilmes = async (query = "", filtros = {}, usuario) => {
+    //verificação para garantir que o usuário está logado
+    if (!usuario || !usuario.id) {
+        setFilmes([]); //limpa a lista de filmes se não houver usuario logado
+        return;
+    }
+
     try {
-      let url = 'http://127.0.0.1:5000/api/filmes';
+        let url = 'http://127.0.0.1:5000/api/filmes';
 
-      const params = new URLSearchParams();
-      if (query.trim()) params.append("q", query);
-      if (filtros.ano) params.append("ano", filtros.ano);
-      if (filtros.genero) params.append("genero", filtros.genero);
+        const params = new URLSearchParams();
+        
+        // Adiciona o ID do usuário aos parâmetros
+        params.append("usuario_id", usuario.id); 
 
-      if (params.toString()) url += "?" + params.toString();
+        if (query.trim()) params.append("q", query);
+        if (filtros.ano) params.append("ano", filtros.ano);
+        if (filtros.genero) params.append("genero", filtros.genero);
 
-      const response = await axios.get(url);
-      const filmesData = response.data;
-      setFilmes(filmesData);
+        if (params.toString()) url += "?" + params.toString();
 
-      const statusInicial = {};
-      filmesData.forEach(filme => {
-        statusInicial[filme.id_filme] = {
-          visto: filme.visto,
-          desejoVer: filme.desejo_ver
-        };
-      });
-      setListStatus(statusInicial);
+        const response = await axios.get(url);
+        const filmesData = response.data;
+        setFilmes(filmesData);
+
+        const statusInicial = {};
+        filmesData.forEach(filme => {
+            statusInicial[filme.id_filme] = {
+                visto: filme.visto,
+                desejoVer: filme.desejo_ver
+            };
+        });
+        setListStatus(statusInicial);
 
     } catch (error) {
-      console.error("Erro ao buscar filmes:", error);
+        console.error("Erro ao buscar filmes:", error);
     }
-  };
+};
+
 
   const handleToggleLista = async (filmeId, nomeDaLista) => {
+    // Adiciona a verificação do usuário
+    if (!usuario || !usuario.id) {
+        alert("Você precisa estar logado para adicionar filmes à sua lista.");
+        return;
+    }
+
     const isCurrentlyOnList = nomeDaLista === 'Vistos'
-      ? listStatus[filmeId]?.visto
-      : listStatus[filmeId]?.desejoVer;
+        ? listStatus[filmeId]?.visto
+        : listStatus[filmeId]?.desejoVer;
 
     const endpoint = isCurrentlyOnList ? 'remover_filme' : 'adicionar_filme';
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filme_id: filmeId, nome_lista: nomeDaLista }),
-      });
+        const response = await fetch(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                filme_id: filmeId, 
+                nome_lista: nomeDaLista,
+                id_usuario: usuario.id //envia o id do usuario
+            }),
+        });
 
-      if (response.ok) {
-        setListStatus(prev => ({
-          ...prev,
-          [filmeId]: {
-            ...prev[filmeId],
-            [nomeDaLista === 'Vistos' ? 'visto' : 'desejoVer']: !isCurrentlyOnList
-          }
-        }));
-      } else {
-        const data = await response.json();
-        console.error(`Erro: ${data.message}`);
-      }
+        if (response.ok) {
+            setListStatus(prev => ({
+                ...prev,
+                [filmeId]: {
+                    ...prev[filmeId],
+                    [nomeDaLista === 'Vistos' ? 'visto' : 'desejoVer']: !isCurrentlyOnList
+                }
+            }));
+        } else {
+            const data = await response.json();
+            console.error(`Erro: ${data.message}`);
+        }
     } catch (error) {
-      console.error("Erro de conexão.", error);
+        console.error("Erro de conexão.", error);
     }
-  };
+};
+
 
   const handleMovieAdded = () => { 
       setOpenAddModal(false);
   };
 
-  useEffect(() => {
+useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      console.log("Chamando fetchFilmes com busca:", searchTerm, "e filtros:", filtrosAtivos);
-      fetchFilmes(searchTerm, filtrosAtivos);
+        console.log("Chamando fetchFilmes com busca:", searchTerm, "e filtros:", filtrosAtivos);
+        fetchFilmes(searchTerm, filtrosAtivos, usuario);
     }, 200);
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, filtrosAtivos]);
+  }, [searchTerm, filtrosAtivos, usuario]);
 
     return (
     <ThemeProvider theme={dashboardTheme}>

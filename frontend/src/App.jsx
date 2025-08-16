@@ -6,7 +6,6 @@ import RegisterPage from './pages/RegisterPage';
 import FilmeDetalhesPage from './pages/FilmeDetalhesPage';
 import './App.css';
 
-// Componente principal com a lógica de roteamento
 function MainApp() {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
     const [filmeSelecionado, setFilmeSelecionado] = useState(null);
@@ -17,7 +16,6 @@ function MainApp() {
         navigate('/dashboard');
     };
 
-    // Esta função agora passa o filme e navega
     const handleVerDetalhes = (filme) => {
         setFilmeSelecionado(filme);
         navigate('/filmeDetalhes');
@@ -28,22 +26,36 @@ function MainApp() {
         navigate('/');
     };
 
+    // FUNÇÕES DE NAVEGAÇÃO ENTRE LOGIN E REGISTER
+    const handleSwitchToRegister = () => {
+        navigate('/register');
+    };
+
+    const handleSwitchToLogin = () => {
+        navigate('/');
+    };
+
     return (
         <Routes>
-            <Route path="/" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route 
+                path="/" 
+                element={<LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />} 
+            />
+            <Route 
+                path="/register" 
+                element={<RegisterPage onSwitchToLogin={handleSwitchToLogin} />} 
+            />
             <Route 
                 path="/dashboard" 
                 element={
                     usuarioLogado ? (
-                        // A prop onVerDetalhes é passada aqui
                         <DashboardPage 
                             usuario={usuarioLogado} 
                             onVerDetalhes={handleVerDetalhes}
                             onLogout={handleLogout}
                         />
                     ) : (
-                        <LoginPage onLoginSuccess={handleLoginSuccess} />
+                        <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
                     )
                 } 
             />
@@ -55,6 +67,7 @@ function MainApp() {
                             key={filmeSelecionado.id_filme}
                             filme={filmeSelecionado} 
                             onVoltar={() => navigate('/dashboard')}
+                            usuario={usuarioLogado}
                         />
                     ) : (
                         <DashboardPage 
@@ -69,7 +82,6 @@ function MainApp() {
     );
 }
 
-// O componente App.js deve apenas envolver o MainApp com o Router
 function App() {
     return (
         <Router>
