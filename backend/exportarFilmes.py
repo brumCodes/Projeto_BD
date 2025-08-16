@@ -30,7 +30,7 @@ def exportarFilmes():
         print(f"erro ao escrever no arquivo: {e}")
 
 
-# Função para atualizar o poster de um filme no banco de dados
+# função para atualizar o poster de um filme no banco de dados
 def atualizar_poster(filme_id, novo_url):
     try:
         with sqlite3.connect('database.db') as conn:

@@ -1,5 +1,3 @@
-// frontend/src/components/AddMovieForm.jsx
-
 import React, { useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
@@ -25,8 +23,8 @@ function AddMovieForm({ open, onClose, onSuccess }) {
     });
 
     if (response.ok) {
-      onSuccess(); // Avisa o Dashboard que o filme foi adicionado
-      onClose();   // Fecha o modal
+      onSuccess(); // avisa o dashboard que o filme foi adicionado
+      onClose();
     } else {
       alert("Erro ao adicionar filme.");
     }

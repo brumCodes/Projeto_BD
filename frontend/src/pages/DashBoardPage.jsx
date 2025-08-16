@@ -130,8 +130,8 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes }) {
                     <CardMedia
                       className="dashboard-card-media" component="img" image={filme.url_poster} title={filme.titulo}
                     />
-                    <CardContent sx={{ flexGrow: 1, padding: '4px', minHeight: '30px', marginTop: '15px', marginLeft: '4px' }}>
-                      <Typography gutterBottom variant="h5" component="div" className="dashboard-card-title" sx={{ fontSize: '1.16rem', fontWeight: '400' }}>
+                    <CardContent sx={{ flexGrow: 1, padding: '4px', minHeight: '30px', marginLeft: '4px', marginTop: '6px' }}>
+                      <Typography gutterBottom variant="h5" component="div" className="dashboard-card-title" sx={{ fontSize: '1.06rem', fontWeight: '400', height: '2.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop : '2px' }}>
                         {filme.titulo}
                       </Typography>
                     </CardContent>
