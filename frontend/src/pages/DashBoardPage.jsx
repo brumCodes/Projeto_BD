@@ -191,44 +191,67 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes, onVerPerfil }) {
       <CssBaseline />
       <Box className="dashboard-container">
         <AppBar position="static" sx={{ backgroundColor: '#0a0a11ff', color: 'white', backdropFilter: 'blur(30px)' }}>
-          <Toolbar sx={{ color: 'white' }}>
-            <img
-              src={cinetrackLogo}
-              alt="Cinetrack"
-              style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }}
-              onClick={() => navigate('/dashboard')}
-            />
-            <Box className="dashboard-search" sx={{ flexGrow: 1, maxWidth: 300, ml: 4 }}>
-              <TextField
-                fullWidth variant="standard" placeholder="Pesquisar filmes..."
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{ disableUnderline: true}}
-                sx={{ '& .MuiInputBase-input': { padding: '8px', color: 'white' } }}
-              />
-            </Box>
-            <Box sx={{ flexGrow: 1, ml: 2 }}>
-              <Button color="inherit" startIcon={<FilterListIcon />} onClick={() => setOpenFiltros(true)}
-              sx ={{ color: '#d1d1d1ff'}}
-              >
-                Filtros
-              </Button>
-            </Box>
-            <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }} onClick={() => setOpenAddModal(true)}>
-              Add Filme
-            </Button>
-            <IconButton color="inherit" onClick={() => navigate('/perfil')}>
-              {usuario && usuario.url_avatar ? (
-                <Avatar
-                  src={usuario.url_avatar}
-                  sx={{ width: 35, height: 35 }}
-                />
-              ) : (
-                <PersonIcon />
-              )}
-            </IconButton>
-            <Button color="inherit" onClick={onLogout}>Sair</Button>
-          </Toolbar>
-        </AppBar>
+  <Toolbar sx={{ color: 'white' }}>
+    <img
+      src={cinetrackLogo}
+      alt="Cinetrack"
+      style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }}
+      onClick={() => navigate('/dashboard')}
+    />
+    <Box className="dashboard-search" sx={{ flexGrow: 1, maxWidth: 300, ml: 4 }}>
+      <TextField
+        fullWidth variant="standard" placeholder="Pesquisar filmes..."
+        value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+        InputProps={{ disableUnderline: true}}
+        sx={{ '& .MuiInputBase-input': { padding: '8px', color: 'white' } }}
+      />
+    </Box>
+    <Box sx={{ flexGrow: 1, ml: 2 }}>
+      <Button color="inherit" startIcon={<FilterListIcon />} onClick={() => setOpenFiltros(true)}
+      sx ={{ color: '#d1d1d1ff'}}
+      >
+        Filtros
+      </Button>
+    </Box>
+    
+    <Tooltip title="Adicionar novo filme" arrow>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setOpenAddModal(true)}
+        sx={{
+          backgroundColor: '#27df73ff',
+          color: '#0a0a11ff',
+          borderRadius: '50px',
+          padding: '6px 18px',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          textTransform: 'uppercase',
+          mr: 2,
+          '&:hover': {
+            backgroundColor: '#30e481ff',
+            transform: 'scale(1.02)',
+          },
+          transition: 'transform 0.2s ease-in-out',
+        }}
+      >
+        Add Filme
+      </Button>
+    </Tooltip>
+
+    <IconButton color="inherit" onClick={() => navigate('/perfil')}>
+      {usuario && usuario.url_avatar ? (
+        <Avatar
+          src={usuario.url_avatar}
+          sx={{ width: 35, height: 35 }}
+        />
+      ) : (
+        <PersonIcon />
+      )}
+    </IconButton>
+    <Button color="inherit" onClick={onLogout}>Sair</Button>
+  </Toolbar>
+</AppBar>
         <Container className="dashboard-main">
 
           {!isSearchActive && popularFilmes.length > 0 && (
