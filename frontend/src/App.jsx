@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import RegisterPage from './pages/RegisterPage';
 import FilmeDetalhesPage from './pages/FilmeDetalhesPage';
 import ProfilePage from './pages/ProfilePage';
+import ListaDeFilmesPage from './pages/ListaDeFilmesPage';
 import './App.css';
 
 
@@ -28,7 +29,6 @@ function MainApp() {
         navigate('/');
     };
 
-    // FUNÇÕES DE NAVEGAÇÃO ENTRE LOGIN E REGISTER
     const handleSwitchToRegister = () => {
         navigate('/register');
     };
@@ -41,7 +41,12 @@ function MainApp() {
     navigate('/perfil');
 };
 
-    return (
+    const handleVerListaCompleta = (listaNome) => {
+        navigate(`/lista/${listaNome}`);
+    };
+
+
+        return (
         <Routes>
             <Route 
                 path="/" 
@@ -86,14 +91,29 @@ function MainApp() {
                 } 
             />
             <Route 
-            path="/perfil" 
-            element={
-                usuarioLogado ? (
-                    <ProfilePage 
+                path="/perfil" 
+                element={
+                    usuarioLogado ? (
+                        <ProfilePage 
                             usuario={usuarioLogado}
                             onLogout={handleLogout}
                             onVerDetalhes={handleVerDetalhes} 
                             onReturnToDashboard={() => navigate('/dashboard')}
+                            onVerListaCompleta={handleVerListaCompleta}
+                        />
+                    ) : (
+                        <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
+                    )
+                } 
+            />
+            <Route 
+                path="/lista/:listaNome" 
+                element={
+                    usuarioLogado ? (
+                        <ListaDeFilmesPage 
+                            usuario={usuarioLogado}
+                            onLogout={handleLogout}
+                            onVerDetalhes={handleVerDetalhes}
                         />
                     ) : (
                         <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />

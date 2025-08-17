@@ -21,18 +21,18 @@ def login():
     conn = get_db_connection()
 
     user = conn.execute(
-        "SELECT id, nome_usuario, senha FROM usuario WHERE nome_usuario = ?",
+        "SELECT id, nome_usuario, senha, url_avatar FROM usuario WHERE nome_usuario = ?",
         (username,)
     ).fetchone()
     conn.close()
 
-    # o login verifica a senha depois de buscar o nome de usuário
     if user and user['senha'] == password:
         return jsonify({
             "message": "Login bem-sucedido!",
             "usuario": {
                 "id": user['id'],
-                "nome_usuario": user['nome_usuario']
+                "nome_usuario": user['nome_usuario'],
+                "url_avatar": user['url_avatar'] 
             }
         })
     else:
