@@ -96,10 +96,15 @@ const handleSalvarResenha = async () => {
             usuario_id: usuario.id
         };
 
-        await axios.post(
-            `http://127.0.0.1:5000/api/filmes/${filme.id_filme}/avaliacao`,
-            payload
-        );
+        const response = await axios.post(
+          `http://127.0.0.1:5000/api/filmes/${filme.id_filme}/avaliacao`,
+          payload
+        );
+
+        if (response.data.visto_adicionado) {
+            setIsWatched(true);
+        }
+
 
         setReviews(prevReviews => {
             const existingReviewIndex = prevReviews.findIndex(r => r.id_usuario === usuario.id);
