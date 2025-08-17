@@ -27,7 +27,6 @@ function ProfilePage({ usuario, onLogout, onVerDetalhes, onReturnToDashboard }) 
   const [vistosCount, setVistosCount] = useState(0);
   const [watchlistCount, setWatchlistCount] = useState(0);
 
-  // Novos estados para a edição do avatar
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
@@ -93,7 +92,7 @@ function ProfilePage({ usuario, onLogout, onVerDetalhes, onReturnToDashboard }) 
     toggleLista(filmeId, 'Desejo Ver', isAdding);
   };
 
-  // Nova função para salvar o avatar
+  // funçao para salvar o avatar
   const handleSaveAvatar = async () => {
     if (!newAvatarUrl) {
       alert("Por favor, insira um URL de imagem válido.");

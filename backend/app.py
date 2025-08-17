@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-
 from routes.auth import auth_bp
 from routes.filmes import filmes_bp
 from routes.listas import listas_bp

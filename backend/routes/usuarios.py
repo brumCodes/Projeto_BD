@@ -8,14 +8,13 @@ def get_perfil(id_usuario):
     try:
         conn = get_db_connection()
         
-        # 1. Busca os dados do usuário, incluindo o novo campo url_avatar
         usuario = conn.execute('SELECT id, nome_usuario, email, url_avatar FROM Usuario WHERE id = ?', (id_usuario,)).fetchone()
         
         if not usuario:
             conn.close()
             return jsonify({"message": "Usuário não encontrado"}), 404
         
-        # 2. Conta quantos filmes o usuário marcou como 'Vistos'
+
         vistos_count_query = """
             SELECT COUNT(*) AS count_vistos
             FROM Filme_Lista fl
@@ -25,7 +24,6 @@ def get_perfil(id_usuario):
         vistos_count_result = conn.execute(vistos_count_query, (id_usuario,)).fetchone()
         vistos_count = vistos_count_result['count_vistos'] if vistos_count_result and 'count_vistos' in vistos_count_result else 0
         
-        # 3. Busca a lista de filmes marcados como 'Vistos'
         vistos_query = """
             SELECT 
                 f.id_filme, f.titulo, f.url_poster, f.ano, f.duracao, f.genero
@@ -38,7 +36,6 @@ def get_perfil(id_usuario):
         """
         vistos_filmes = conn.execute(vistos_query, (id_usuario,)).fetchall()
         
-        # 4. Busca a lista de filmes da 'Desejo Ver' (watchlist)
         watchlist_query = """
             SELECT 
                 f.id_filme, f.titulo, f.url_poster, f.ano, f.duracao, f.genero
@@ -53,7 +50,6 @@ def get_perfil(id_usuario):
 
         conn.close()
 
-        # 5. Retorna todos os dados em um único JSON, incluindo o url_avatar
         return jsonify({
             "usuario": {
                 "id": usuario['id'],

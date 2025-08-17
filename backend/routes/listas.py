@@ -1,11 +1,32 @@
-# src/routes/listas.py
-
 from flask import Blueprint, request, jsonify
 import sqlite3
 from db import get_db_connection
 
 listas_bp = Blueprint('listas', __name__)
 
+# Rota para a contagem de filmes vistos
+@listas_bp.route('/vistos', methods=['GET'])
+def get_filmes_vistos_count():
+    usuario_id = request.args.get('id_usuario', type=int)
+
+    if not usuario_id:
+        return jsonify({"message": "ID do usuário é obrigatório."}), 400
+
+    try:
+        conn = get_db_connection()
+        count = conn.execute(
+            'SELECT COUNT(fl.id_filme) FROM Filme_Lista fl JOIN Lista l ON fl.id_lista = l.id_lista WHERE l.id_usuario = ? AND l.nome_lista = ? COLLATE NOCASE',
+            (usuario_id, 'Vistos')
+        ).fetchone()[0]
+        
+        conn.close()
+
+        return jsonify(count), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Erro no servidor: {str(e)}"}), 500
+
+# Rota original para obter a lista completa de filmes vistos
 @listas_bp.route('/<int:usuario_id>/vistos', methods=['GET'])
 def get_lista_vistos(usuario_id):
     try:
@@ -20,6 +41,7 @@ def get_lista_vistos(usuario_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Rota para obter a lista 'Desejo Ver' (watchlist)
 @listas_bp.route('/<int:usuario_id>/watchlist', methods=['GET'])
 def get_watchlist(usuario_id):
     try:
@@ -41,7 +63,6 @@ def adicionar_filme_a_lista():
 
     print("DEBUG: Requisição POST para adicionar_filme recebida.")
     print(f"DEBUG: Dados recebidos: {data}")
-
 
     filme_id = data.get('filme_id')
     nome_lista = data.get('nome_lista')

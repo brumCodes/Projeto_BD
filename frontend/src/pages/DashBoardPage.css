@@ -25,7 +25,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.2 ); /* cor e opacidade */
+  background-color: rgba(0, 0, 0, 0.3 ); /* cor e opacidade */
   z-index: 0;
   backdrop-filter: blur(40px);
 }
