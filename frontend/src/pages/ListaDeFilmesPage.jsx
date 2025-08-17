@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Container, Grid, Button, Toolbar, AppBar, IconButton } from "@mui/material";
+import { Box, Typography, Container, Grid, Button, Toolbar, AppBar, IconButton, Avatar } from "@mui/material";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import cinetrackLogo from '../assets/cinetrack-logo.png';
-import PersonIcon from '@mui/icons-material/Person';
-import FilterListIcon from "@mui/icons-material/FilterList";
-import AddIcon from '@mui/icons-material/Add';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+const listTheme = createTheme({
+    typography: {
+        fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", "sans-serif"',
+    },
+});
 
 const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
     const { listaNome } = useParams();
@@ -92,56 +98,79 @@ const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
     }
 
     return (
-        <Box className="dashboard-container" sx={{ flexGrow: 1 }}>
-            <AppBar position="static" sx={{ backgroundColor: '#292828', color: 'white' }}>
-                <Toolbar sx={{ color: 'white' }}>
-                    <img 
-                        src={cinetrackLogo} 
-                        alt="cinetrack" 
-                        style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }} 
-                        onClick={() => navigate('/perfil')}
-                    />
-                    <Box sx={{ flexGrow: 1 }} />
-                    <Button color="inherit" startIcon={<FilterListIcon />} sx={{ color: '#d1d1d1ff' }}>
-                        filtros
-                    </Button>
-                    <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }}>
-                        add filme
-                    </Button>
-                    <Button color="inherit" onClick={() => navigate('/perfil')}>perfil</Button>
-                    <IconButton color="inherit">
-                        <PersonIcon />
-                    </IconButton>
-                    <Button color="inherit" onClick={onLogout}>sair</Button>
-                </Toolbar>
-            </AppBar>
-
-            <Container sx={{ mt: 4, color: 'white' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600 }}>{tituloDaPagina}</Typography>
-                    <Button variant="contained" onClick={() => navigate(-1)}>Voltar</Button>
-                </Box>
-                
-                {filmesComStatus.length > 0 ? (
-                    <Grid container spacing={4} sx={{ mt: 2 }}>
-                        {filmesComStatus.map(filme => (
-                            <Grid item xs={12} sm={6} md={4} lg={3} key={filme.id_filme}>
-                                <MovieCard 
-                                    filme={filme} 
-                                    onVerDetalhes={onVerDetalhes}
-                                    onToggleWatched={onToggleWatched}
-                                    onToggleWatchlist={onToggleWatchlist}
+        <ThemeProvider theme={listTheme}>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    backgroundImage: 'url(/images/background-foto14.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed',
+                    minHeight: '100vh',
+                    flexShrink: 0
+                }}
+            >
+                <AppBar position="static" sx={{ backgroundColor: '#11111aff', color: 'white' }}>
+                    <Toolbar sx={{ color: 'white' }}>
+                        <Button
+                            sx={{ color: '#d1d1d1ff', textTransform: 'none', mr: 2 }}
+                            onClick={() => navigate(-1)}
+                            startIcon={<ArrowBackIcon />}
+                        >
+                            Voltar
+                        </Button>
+                        <img 
+                            src={cinetrackLogo} 
+                            alt="cinetrack" 
+                            style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer', marginRight: 'auto' }} 
+                            onClick={() => navigate('/perfil')}
+                        />
+                        <Button color="inherit" onClick={() => navigate('/perfil')}>
+                            perfil
+                        </Button>
+                        <IconButton color="inherit">
+                            {usuario && usuario.url_avatar ? (
+                                <Avatar 
+                                    src={usuario.url_avatar} 
+                                    sx={{ width: 35, height: 35 }} 
                                 />
-                            </Grid>
-                        ))}
-                    </Grid>
-                ) : (
-                    <Typography sx={{ mt: 4, fontStyle: 'italic', textAlign: 'center' }}>
-                        {`Nenhum filme na lista de ${tituloDaPagina.toLowerCase()}.`}
+                            ) : (
+                                <PersonIcon />
+                            )}
+                        </IconButton>
+                        <Button color="inherit" onClick={onLogout}>
+                            sair
+                        </Button>
+                    </Toolbar>
+                </AppBar>
+
+                <Container sx={{ mt: 4, color: 'white', pb: 8 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 600, textAlign: 'center', mb: 4 }}>
+                        {tituloDaPagina}
                     </Typography>
-                )}
-            </Container>
-        </Box>
+                    
+                    {filmesComStatus.length > 0 ? (
+                        <Grid container spacing={2} justifyContent="center" sx={{ flexGrow: 1 }}>
+                            {filmesComStatus.map(filme => (
+                                <Grid item key={filme.id_filme} xs={12} sm={6} md={4} lg={2.4}>
+                                    <MovieCard 
+                                        filme={filme} 
+                                        onVerDetalhes={onVerDetalhes}
+                                        onToggleWatched={onToggleWatched}
+                                        onToggleWatchlist={onToggleWatchlist}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    ) : (
+                        <Typography sx={{ mt: 4, fontStyle: 'italic', textAlign: 'center' }}>
+                            {`Nenhum filme na lista de ${tituloDaPagina.toLowerCase()}.`}
+                        </Typography>
+                    )}
+                </Container>
+            </Box>
+        </ThemeProvider>
     );
 };
 

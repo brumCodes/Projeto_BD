@@ -128,32 +128,28 @@ function ProfilePage({ usuario, onLogout, onVerDetalhes, onReturnToDashboard }) 
     <ThemeProvider theme={profileTheme}>
       <Box className="profile-container" sx={{ flexGrow: 1 }}>
         <AppBar position="static" sx={{ backgroundColor: '#11111aff', color: 'white' }}>
-          <Toolbar sx={{ color: 'white' }}>
-            <img 
-              src={cinetrackLogo} 
-              alt="cinetrack" 
-              style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }} 
-              onClick={onReturnToDashboard}
-            />
-            <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" color="secondary" startIcon={<AddIcon />} sx={{ mr: 2 }}>
-              add filme
-            </Button>
-            {/* INÍCIO DA MUDANÇA: Renderização condicional para a foto de perfil */}
-            <IconButton color="inherit">
-              {profileData.usuario.url_avatar ? (
-                <Avatar 
-                  src={profileData.usuario.url_avatar} 
-                  sx={{ width: 35, height: 35 }} 
-                />
-              ) : (
-                <PersonIcon />
-              )}
-            </IconButton>
-            {/* FIM DA MUDANÇA */}
-            <Button color="inherit" onClick={onLogout}>sair</Button>
-          </Toolbar>
-        </AppBar>
+  <Toolbar sx={{ color: 'white' }}>
+    <Box sx={{ ml: 40 }} /> 
+    <img 
+      src={cinetrackLogo} 
+      alt="cinetrack" 
+      style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }} 
+      onClick={onReturnToDashboard}
+    />
+    <Box sx={{ width: '820px' }} />
+    <IconButton color="inherit">
+      {profileData.usuario.url_avatar ? (
+        <Avatar 
+          src={profileData.usuario.url_avatar} 
+          sx={{ width: 35, height: 35 }} 
+        />
+      ) : (
+        <PersonIcon />
+      )}
+    </IconButton>
+    <Button color="inherit" onClick={onLogout}>sair</Button>
+</Toolbar>
+</AppBar>
 
         <Container sx={{ mt: 8, color: 'white' }}>
           <Box 
