@@ -243,7 +243,7 @@ function ProfilePage({ usuario, onLogout, onVerDetalhes, onReturnToDashboard }) 
 
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h5" sx={{ fontWeight: 400, color: '#c7c4c4ff', fontSize: '1.4rem'}}>SUA WATCHLIST</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 400, color: '#c7c4c4ff', fontSize: '1.4rem'}}>WATCHLIST</Typography>
                 {profileData.watchlist.length > 5 && (
                     <Button onClick={() => handleVerListaCompleta('Desejo Ver')} sx={{ color: '#d1d1d1ff', textTransform: 'none', marginRight: '60px' }}>
                       Ver Mais
