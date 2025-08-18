@@ -35,7 +35,11 @@ function FilmeDetalhesPage({ filme, onVoltar, usuario }) {
     const [isWatched, setIsWatched] = useState(false);
     const [isOnWatchlist, setIsOnWatchlist] = useState(false);
     const [reviews, setReviews] = useState([]);
-    const [editingReviewId, setEditingReviewId] = useState(null); // Novo estado para saber qual review está sendo editada
+    const [editingReviewId, setEditingReviewId] = useState(null);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     useEffect(() => {
         const fetchMovieStatusAndReviews = async () => {
