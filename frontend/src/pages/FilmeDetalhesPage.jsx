@@ -41,7 +41,9 @@ function FilmeDetalhesPage({ filme, onVoltar, usuario }) {
         window.scrollTo(0, 0);
     }, []);
 
-    useEffect(() => {
+        useEffect(() => {
+        window.scrollTo(0, 0);
+        
         const fetchMovieStatusAndReviews = async () => {
             if (!filme || !filme.id_filme || !usuario || !usuario.id) {
                 console.log('Filme ou usuário não definidos, pulando a busca de status e reviews.');
@@ -59,20 +61,31 @@ function FilmeDetalhesPage({ filme, onVoltar, usuario }) {
                 
                 console.log("Dados de reviews recebidos:", reviewsResponse.data);
 
-                setReviews(reviewsResponse.data);
-
+                // --- CORREÇÃO AQUI ---
+                // Verifica se a resposta é um array antes de setar o estado
+                if (Array.isArray(reviewsResponse.data)) {
+                    setReviews(reviewsResponse.data);
+                } else {
+                    console.error("A API de reviews retornou dados inválidos. Esperado um array.");
+                    setReviews([]); // Define para um array vazio para evitar erros
+                }
+                
+                // O resto do seu código de tratamento de reviews
                 const myReview = reviewsResponse.data.find(r => r.id_usuario === usuario.id);
                 if (myReview) {
                     setMyRating(myReview.nota);
                     setResenha(myReview.comentario || "");
-                    setUserRating(myReview.nota); // Defina a nota atual do usuário para o modal
+                    setUserRating(myReview.nota);
                 }
+
             } catch (error) {
                 console.error("Erro ao buscar dados do filme:", error);
+                setReviews([]); // Em caso de erro, garante que reviews é um array vazio.
             }
         };
         fetchMovieStatusAndReviews();
-    }, [filme, usuario]);
+    }, [filme, usuario]); // Dependências do useEffect
+
 
     if (!filme) {
         console.log('Filme não encontrado.', filme);

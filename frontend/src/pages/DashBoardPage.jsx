@@ -292,7 +292,7 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes, onVerPerfil }) {
                   color: '#b8b6b6ff'
                 }}
               >
-                POPULARES ATUALMENTE
+                MELHORES AVALIAÇÕES
               </Typography>
               <Grid container spacing={3} justifyContent="center">
                 {popularFilmes.map(filme => (
@@ -458,6 +458,7 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes, onVerPerfil }) {
           open={openAddModal}
           onClose={() => setOpenAddModal(false)}
           onSuccess={handleMovieAdded}
+          usuario={usuario}
         />
         <Filtros
           open={openFiltros}

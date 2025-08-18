@@ -68,37 +68,58 @@ def get_filmes():
 # Rota para adicionar um novo filme
 @filmes_bp.route('/filmes', methods=['POST'])
 def add_filme():
+    conn = None
     try:
-        data = request.form
-        titulo = data.get('titulo')
-        ano = data.get('ano')
+        data = request.json
+        
+        # Validação explícita dos campos obrigatórios
+        campos_obrigatorios = ['titulo', 'ano', 'diretor', 'id_usuario'] # Adicionei 'id_usuario'
+        for campo in campos_obrigatorios:
+            if campo not in data or not data.get(campo):
+                return jsonify({"error": f"O campo '{campo}' é obrigatório."}), 400
+        
+        titulo = data['titulo']
+        diretor = data['diretor']
+        ano = int(data['ano'])
+        id_usuario = data['id_usuario'] # Recebe o ID do usuário
+
+        # Campos opcionais, use .get() para evitar erros se não existirem
         duracao = data.get('duracao')
         genero = data.get('genero')
-        diretor = data.get('diretor')
         sinopse = data.get('sinopse')
+        url_poster = data.get('url_poster')
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        poster = request.files.get('poster')
-        poster_filename = None
-        if poster:
-            if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
-                os.makedirs(current_app.config['UPLOAD_FOLDER'])
-            poster_filename = secure_filename(poster.filename)
-            poster_path = os.path.join(current_app.config['UPLOAD_FOLDER'], poster_filename)
-            poster.save(poster_path)
-
+        # Adicione 'id_usuario' na consulta e nos parâmetros
         cursor.execute(
-            "INSERT INTO Filme (titulo, ano, duracao, genero, diretor, sinopse, url_poster) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (titulo, ano, duracao, genero, diretor, sinopse, poster_filename)
+            "INSERT INTO Filme (titulo, ano, duracao, genero, diretor, sinopse, url_poster, id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (titulo, ano, duracao, genero, diretor, sinopse, url_poster, id_usuario)
         )
         conn.commit()
-        conn.close()
+        
         return jsonify({"message": "Filme adicionado com sucesso!"}), 201
 
+    except (ValueError, TypeError):
+        if conn:
+            conn.rollback()
+        return jsonify({"error": "Dados inválidos. O ano ou a duração devem ser números inteiros."}), 400
+
+    except sqlite3.IntegrityError as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"error": f"Erro de integridade do banco de dados: {e}"}), 400
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        if conn:
+            conn.rollback()
+        print(f"Erro inesperado ao adicionar filme: {e}")
+        return jsonify({"error": "Erro interno do servidor. Por favor, tente novamente mais tarde."}), 500
+
+    finally:
+        if conn:
+            conn.close()
 
 # Rota para obter o status do filme
 @filmes_bp.route('/filmes/<int:filme_id>/status', methods=['GET'])
@@ -208,6 +229,7 @@ def update_review(review_id):
     """
     Rota para atualizar uma resenha existente.
     """
+    conn = None  # Inicializa a conexão
     try:
         data = request.json
         nota = data.get('nota')
@@ -252,7 +274,8 @@ def update_review(review_id):
         print(f"Ocorreu um erro ao processar a requisição: {e}")
         return jsonify({'error': 'Ocorreu um erro interno no servidor'}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 # Rota para obter filmes populares
 @filmes_bp.route('/filmes/populares', methods=['GET'])
@@ -298,7 +321,7 @@ def get_popular_filmes():
     finally:
         conn.close()
 
-# Rota para obter as reviews de um filme
+# rota para obter as reviews de um filme
 @filmes_bp.route('/filmes/<int:filme_id>/reviews', methods=['GET'])
 def get_movie_reviews(filme_id):
     usuario_id = request.args.get('usuario_id', type=int)
@@ -315,7 +338,7 @@ def get_movie_reviews(filme_id):
                 (SELECT COUNT(*) FROM CurtidasAvaliacao ca WHERE ca.id_avaliacao = a.id_avaliacao) AS curtidas_contagem,
                 CASE WHEN ? AND (SELECT 1 FROM CurtidasAvaliacao ca WHERE ca.id_avaliacao = a.id_avaliacao AND ca.id_usuario = ?) THEN 1 ELSE 0 END AS curtido_por_voce
             FROM Avaliacao a
-            JOIN Usuario u ON a.id_usuario = u.id -- CORREÇÃO: Usando u.id em vez de u.id_usuario
+            JOIN Usuario u ON a.id_usuario = u.id -- CORREÇÃO: A coluna na tabela 'Usuario' provavelmente se chama 'id'
             WHERE a.id_filme = ?
             ORDER BY a.data_avaliacao DESC
         """
@@ -336,7 +359,7 @@ def get_movie_reviews(filme_id):
 def like_review():
     data = request.json
     id_avaliacao = data.get('id_avaliacao')
-    usuario_id = data.get('usuario_id') # CORREÇÃO: Usar 'usuario_id' para consistência
+    usuario_id = data.get('usuario_id')
 
     if not id_avaliacao or not usuario_id:
         return jsonify({"error": "Dados incompletos"}), 400
