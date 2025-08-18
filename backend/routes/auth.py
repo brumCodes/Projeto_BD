@@ -38,7 +38,24 @@ def login():
     else:
         return jsonify({"message": "Nome de usuário ou senha inválidos"}), 401
 
+@auth_bp.route('/perfil/<int:usuario_id>', methods=['GET'])
+def get_perfil_usuario(usuario_id):
+    conn = get_db_connection()
+    user = conn.execute(
+        "SELECT id, nome_usuario, email, url_avatar FROM usuario WHERE id = ?",
+        (usuario_id,)
+    ).fetchone()
+    conn.close()
 
+    if user is None:
+        return jsonify({"message": "Usuário não encontrado."}), 404
+    
+    return jsonify({
+        "id": user['id'],
+        "nome_usuario": user['nome_usuario'],
+        "email": user['email'],
+        "url_avatar": user['url_avatar']
+    })
     
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -52,10 +69,10 @@ def register():
     
     conn = get_db_connection()
     try:
-        # Insere o novo usuário no banco com a senha em texto puro
+        placeholder_url = 'https://via.placeholder.com/100/303540/FFFFFF?text=User'
         conn.execute(
-            'INSERT INTO usuario (nome_usuario, email, senha) VALUES (?, ?, ?)',
-            (username, email, password)
+            'INSERT INTO usuario (nome_usuario, email, senha, url_avatar) VALUES (?, ?, ?, ?)',
+            (username, email, password, placeholder_url)
         )
         conn.commit()
     except sqlite3.IntegrityError:

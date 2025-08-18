@@ -6,10 +6,11 @@ DROP TABLE IF EXISTS usuario;
 DROP TABLE IF EXISTS teste;
 
 CREATE TABLE usuario (
-    id            INTEGER PRIMARY KEY,
-    nome_usuario  TEXT NOT NULL UNIQUE,
-    email         TEXT NOT NULL UNIQUE,
-    senha         TEXT NOT NULL
+    id              INTEGER PRIMARY KEY,
+    nome_usuario    TEXT NOT NULL UNIQUE,
+    email           TEXT NOT NULL UNIQUE,
+    senha           TEXT NOT NULL,
+    url_avatar      VARCHAR(255)
 );
 
 CREATE TABLE Filme (
@@ -30,16 +31,17 @@ CREATE TABLE Filme (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_filme_titulo_ano_diretor ON Filme(titulo, ano, diretor);
 
 CREATE TABLE Avaliacao (
-  id_usuario     INTEGER NOT NULL,
-  id_filme       INTEGER NOT NULL,
-  nota           REAL    NOT NULL CHECK (nota >= 0.0 AND nota <= 5.0),
-  comentario     TEXT,
-  data_avaliacao DATE    NOT NULL DEFAULT (date('now')),
-  PRIMARY KEY (id_usuario, id_filme),
-  FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (id_filme) REFERENCES Filme(id_filme)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+    id_avaliacao    INTEGER PRIMARY KEY AUTOINCREMENT, 
+    id_usuario      INTEGER NOT NULL,
+    id_filme        INTEGER NOT NULL,
+    nota            REAL NOT NULL CHECK (nota >= 0.0 AND nota <= 5.0),
+    comentario      TEXT,
+    data_avaliacao  DATE NOT NULL DEFAULT (date('now')),
+    UNIQUE (id_usuario, id_filme),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_filme) REFERENCES Filme(id_filme)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE Lista (
@@ -56,7 +58,7 @@ CREATE TABLE Lista (
 CREATE TABLE Filme_Lista (
   id_lista    INTEGER NOT NULL,
   id_filme    INTEGER NOT NULL,
-  ordem       INTEGER, -- psicao do filme na lista
+  ordem       INTEGER, 
   data_adicionado DATETIME NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (id_lista, id_filme),
   FOREIGN KEY (id_lista) REFERENCES Lista(id_lista)
@@ -65,6 +67,15 @@ CREATE TABLE Filme_Lista (
   FOREIGN KEY (id_filme) REFERENCES Filme(id_filme)
     ON DELETE CASCADE
     ON UPDATE CASCADE
+);
+
+CREATE TABLE CurtidasAvaliacao (
+    id_avaliacao    INTEGER NOT NULL,
+    id_usuario      INTEGER NOT NULL,
+    data_curtida    DATETIME NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (id_avaliacao, id_usuario),
+    FOREIGN KEY (id_avaliacao) REFERENCES Avaliacao(id_avaliacao) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE
 );
 
 

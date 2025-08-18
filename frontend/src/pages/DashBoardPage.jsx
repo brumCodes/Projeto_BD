@@ -239,7 +239,7 @@ function DashboardPage({ usuario, onLogout, onVerDetalhes, onVerPerfil }) {
       </Button>
     </Tooltip>
 
-    <IconButton color="inherit" onClick={() => navigate('/perfil')}>
+    <IconButton color="inherit" onClick={() => navigate(`/perfil/${usuario.id}`)}>
       {usuario && usuario.url_avatar ? (
         <Avatar
           src={usuario.url_avatar}

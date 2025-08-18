@@ -8,7 +8,6 @@ import ProfilePage from './pages/ProfilePage';
 import ListaDeFilmesPage from './pages/ListaDeFilmesPage';
 import './App.css';
 
-
 function MainApp() {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
     const [filmeSelecionado, setFilmeSelecionado] = useState(null);
@@ -38,15 +37,21 @@ function MainApp() {
     };
 
     const handleVerPerfil = () => {
-    navigate('/perfil');
-};
-
-    const handleVerListaCompleta = (listaNome) => {
-        navigate(`/lista/${listaNome}`);
+        if (usuarioLogado) {
+            navigate(`/perfil/${usuarioLogado.id}`);
+        } else {
+            navigate('/');
+        }
     };
 
+    // ALTERAÇÃO CRUCIAL AQUI: Agora passamos o ID do usuário para a navegação
+    const handleVerListaCompleta = (listaNome) => {
+        if (usuarioLogado) {
+            navigate(`/lista/${listaNome}/${usuarioLogado.id}`);
+        }
+    };
 
-        return (
+    return (
         <Routes>
             <Route 
                 path="/" 
@@ -86,28 +91,26 @@ function MainApp() {
                             usuario={usuarioLogado} 
                             onVerDetalhes={handleVerDetalhes}
                             onLogout={handleLogout}
+                            onVerPerfil={handleVerPerfil}
                         />
                     )
                 } 
             />
             <Route 
-                path="/perfil" 
+                path="/perfil/:id" 
                 element={
-                    usuarioLogado ? (
-                        <ProfilePage 
-                            usuario={usuarioLogado}
-                            onLogout={handleLogout}
-                            onVerDetalhes={handleVerDetalhes} 
-                            onReturnToDashboard={() => navigate('/dashboard')}
-                            onVerListaCompleta={handleVerListaCompleta}
-                        />
-                    ) : (
-                        <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
-                    )
+                    <ProfilePage 
+                        usuario={usuarioLogado}
+                        onLogout={handleLogout}
+                        onVerDetalhes={handleVerDetalhes} 
+                        onReturnToDashboard={() => navigate('/dashboard')}
+                        onVerListaCompleta={handleVerListaCompleta}
+                    />
                 } 
             />
+            {/* NOVA ROTA ADICIONADA: AGORA COM ID DO USUÁRIO NA URL */}
             <Route 
-                path="/lista/:listaNome" 
+                path="/lista/:listaNome/:id" 
                 element={
                     usuarioLogado ? (
                         <ListaDeFilmesPage 

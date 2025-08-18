@@ -5,11 +5,12 @@ import os
 from flask import current_app
 from db import get_db_connection
 from flask_cors import CORS
-
+from datetime import datetime
 
 filmes_bp = Blueprint('filmes', __name__)
 CORS(filmes_bp)
 
+# Rota para obter todos os filmes ou filtrar
 @filmes_bp.route('/filmes', methods=['GET'])
 def get_filmes():
     usuario_id = request.args.get('usuario_id', type=int)
@@ -64,9 +65,7 @@ def get_filmes():
     
     return jsonify(filmes_list)
 
-
-#rota para adicionar um novo filme
-
+# Rota para adicionar um novo filme
 @filmes_bp.route('/filmes', methods=['POST'])
 def add_filme():
     try:
@@ -101,12 +100,9 @@ def add_filme():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-#rota para obter detalhes de um filme
-
+# Rota para obter o status do filme
 @filmes_bp.route('/filmes/<int:filme_id>/status', methods=['GET'])
 def get_filme_status(filme_id):
-
     usuario_id = request.args.get('usuario_id', type=int)
     if not usuario_id:
         return jsonify({"error": "ID do usuário não fornecido"}), 400
@@ -135,7 +131,7 @@ def get_filme_status(filme_id):
         "desejo_ver": bool(desejo_ver_result)
     })
 
-# rota para salvar a avaliação de um filme
+# Rota para salvar a avaliação de um filme
 @filmes_bp.route('/filmes/<int:filme_id>/avaliacao', methods=['POST'])
 def add_avaliacao(filme_id):
     data = request.json
@@ -150,17 +146,22 @@ def add_avaliacao(filme_id):
     cursor = conn.cursor()
 
     try:
-
         cursor.execute(
-            "UPDATE Avaliacao SET nota = ?, comentario = ? WHERE id_filme = ? AND id_usuario = ?",
-            (nota, comentario, filme_id, usuario_id)
+            "SELECT id_avaliacao FROM Avaliacao WHERE id_filme = ? AND id_usuario = ?",
+            (filme_id, usuario_id)
         )
-        if cursor.rowcount == 0:
-            cursor.execute(
-                "INSERT INTO Avaliacao (id_filme, id_usuario, nota, comentario) VALUES (?, ?, ?, ?)",
-                (filme_id, usuario_id, nota, comentario)
-            )
+        avaliacao_existente = cursor.fetchone()
 
+        if avaliacao_existente:
+            return jsonify({"error": "Avaliação já existe para este filme e usuário. Use a rota de PUT para atualizar."}), 409
+        else:
+            cursor.execute(
+                "INSERT INTO Avaliacao (id_filme, id_usuario, nota, comentario, data_avaliacao) VALUES (?, ?, ?, ?, ?)",
+                (filme_id, usuario_id, nota, comentario, datetime.now())
+            )
+            id_avaliacao = cursor.lastrowid
+
+        # Recalcula a média de avaliação
         avg_result = conn.execute(
             "SELECT AVG(nota) FROM Avaliacao WHERE id_filme = ?",
             (filme_id,)
@@ -171,11 +172,13 @@ def add_avaliacao(filme_id):
             (nova_media, filme_id)
         )
 
+        # Adiciona o filme à lista 'Vistos' do usuário
         vistos_lista_id = conn.execute(
             "SELECT id_lista FROM Lista WHERE id_usuario = ? AND nome_lista = 'Vistos'",
             (usuario_id,)
         ).fetchone()
-
+        
+        visto_adicionado = False
         if vistos_lista_id:
             filme_ja_visto = conn.execute(
                 "SELECT 1 FROM Filme_Lista WHERE id_filme = ? AND id_lista = ?",
@@ -187,10 +190,10 @@ def add_avaliacao(filme_id):
                     "INSERT INTO Filme_Lista (id_filme, id_lista) VALUES (?, ?)",
                     (filme_id, vistos_lista_id[0])
                 )
+                visto_adicionado = True
         
         conn.commit()
-
-        return jsonify({"message": "Resenha e nota salvas com sucesso!", "media_atualizada": nova_media, "visto_adicionado": True}), 201
+        return jsonify({"message": "Resenha e nota salvas com sucesso!", "media_atualizada": nova_media, "visto_adicionado": visto_adicionado, "id_avaliacao": id_avaliacao}), 201
 
     except Exception as e:
         conn.rollback()
@@ -199,7 +202,59 @@ def add_avaliacao(filme_id):
     finally:
         conn.close()
 
-# rota para obter filmes populares pra pagina inicial
+# Rota para ATUALIZAR uma resenha existente
+@filmes_bp.route('/reviews/<int:review_id>', methods=['PUT'])
+def update_review(review_id):
+    """
+    Rota para atualizar uma resenha existente.
+    """
+    try:
+        data = request.json
+        nota = data.get('nota')
+        comentario = data.get('comentario')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id_usuario, id_filme FROM Avaliacao WHERE id_avaliacao = ?",
+            (review_id,)
+        )
+        avaliacao_info = cursor.fetchone()
+        
+        if not avaliacao_info:
+            return jsonify({'error': 'Resenha não encontrada'}), 404
+            
+        usuario_id = avaliacao_info['id_usuario']
+        filme_id = avaliacao_info['id_filme']
+
+        cursor.execute(
+            "UPDATE Avaliacao SET nota = ?, comentario = ?, data_avaliacao = ? WHERE id_avaliacao = ?",
+            (nota, comentario, datetime.now(), review_id)
+        )
+        
+        avg_result = conn.execute(
+            "SELECT AVG(nota) FROM Avaliacao WHERE id_filme = ?",
+            (filme_id,)
+        ).fetchone()
+        nova_media = round(avg_result[0], 2) if avg_result[0] is not None else 0
+        
+        cursor.execute(
+            "UPDATE Filme SET media_avaliacao = ? WHERE id_filme = ?",
+            (nova_media, filme_id)
+        )
+        
+        conn.commit()
+        
+        return jsonify({'message': f'Resenha {review_id} atualizada com sucesso!'}), 200
+
+    except Exception as e:
+        print(f"Ocorreu um erro ao processar a requisição: {e}")
+        return jsonify({'error': 'Ocorreu um erro interno no servidor'}), 500
+    finally:
+        conn.close()
+
+# Rota para obter filmes populares
 @filmes_bp.route('/filmes/populares', methods=['GET'])
 def get_popular_filmes():
     usuario_id = request.args.get('usuario_id', type=int)
@@ -243,7 +298,7 @@ def get_popular_filmes():
     finally:
         conn.close()
 
-#rota para obter as reviews de um filme
+# Rota para obter as reviews de um filme
 @filmes_bp.route('/filmes/<int:filme_id>/reviews', methods=['GET'])
 def get_movie_reviews(filme_id):
     usuario_id = request.args.get('usuario_id', type=int)
@@ -253,58 +308,21 @@ def get_movie_reviews(filme_id):
     cursor = conn.cursor()
 
     try:
-        # Consulta principal para buscar as reviews e os comentários
         reviews_query = """
             SELECT
-                a.id_filme,
-                a.id_usuario,
-                a.nota,
-                a.comentario,
-                a.data_avaliacao,
-                u.nome_usuario,
-                u.url_avatar
+                a.id_avaliacao, a.id_filme, a.id_usuario, a.nota, a.comentario, a.data_avaliacao,
+                u.nome_usuario, u.url_avatar,
+                (SELECT COUNT(*) FROM CurtidasAvaliacao ca WHERE ca.id_avaliacao = a.id_avaliacao) AS curtidas_contagem,
+                CASE WHEN ? AND (SELECT 1 FROM CurtidasAvaliacao ca WHERE ca.id_avaliacao = a.id_avaliacao AND ca.id_usuario = ?) THEN 1 ELSE 0 END AS curtido_por_voce
             FROM Avaliacao a
-            LEFT JOIN Usuario u ON a.id_usuario = u.id
+            JOIN Usuario u ON a.id_usuario = u.id -- CORREÇÃO: Usando u.id em vez de u.id_usuario
             WHERE a.id_filme = ?
             ORDER BY a.data_avaliacao DESC
         """
-        cursor.execute(reviews_query, (filme_id,))
-        reviews_data = cursor.fetchall()
-        print("Conteúdo da review (dicionário):", dict(reviews_data[0]))
-        
-        reviews_list = []
-        for review in reviews_data:
-            review_dict = dict(review)
-            
-            # Sub-consulta para contar as curtidas de forma isolada
-            likes_count_query = """
-                SELECT COUNT(*) FROM CurtidasAvaliacao
-                WHERE id_filme = ? AND id_usuario = ?
-            """
-            likes_count = conn.execute(likes_count_query, (review_dict['id_filme'], review_dict['id_usuario'])).fetchone()[0]
+        reviews_data = cursor.execute(reviews_query, (usuario_id, usuario_id, filme_id)).fetchall()
 
-            # Sub-consulta para verificar se o usuário logado curtiu, de forma isolada
-            curtido_por_voce = False
-            if usuario_id:
-                curtiu_query = """
-                    SELECT 1 FROM CurtidasAvaliacao
-                    WHERE id_filme = ? AND id_usuario = ?
-                """
-                curtiu_result = conn.execute(curtiu_query, (review_dict['id_filme'], usuario_id)).fetchone()
-                curtido_por_voce = curtiu_result is not None
+        reviews_list = [dict(row) for row in reviews_data]
 
-            reviews_list.append({
-                'id_filme': review_dict['id_filme'],
-                'id_usuario': review_dict['id_usuario'],
-                'nota': review_dict['nota'],
-                'comentario': review_dict['comentario'], 
-                'data_avaliacao': review_dict['data_avaliacao'],
-                'nome_usuario': review_dict['nome_usuario'],
-                'url_avatar': review_dict['url_avatar'],
-                'curtidas_contagem': likes_count,
-                'curtido_por_voce': curtido_por_voce
-            })
-        
         return jsonify(reviews_list), 200
 
     except Exception as e:
@@ -313,42 +331,37 @@ def get_movie_reviews(filme_id):
     finally:
         conn.close()
 
-
-# Rota para curtir um filme
+# Rota para curtir uma review
 @filmes_bp.route('/reviews/like', methods=['POST'])
 def like_review():
     data = request.json
-    id_filme = data.get('id_filme')
-    usuario_id_avaliacao = data.get('id_usuario_avaliacao')
-    usuario_id_curtindo = data.get('usuario_id_curtindo')
+    id_avaliacao = data.get('id_avaliacao')
+    usuario_id = data.get('usuario_id') # CORREÇÃO: Usar 'usuario_id' para consistência
 
-    if not id_filme or not usuario_id_avaliacao or not usuario_id_curtindo:
+    if not id_avaliacao or not usuario_id:
         return jsonify({"error": "Dados incompletos"}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        
         cursor.execute(
-            "SELECT COUNT(*) FROM CurtidasAvaliacao WHERE id_filme = ? AND id_usuario = ?",
-            (id_filme, usuario_id_curtindo)
+            "SELECT COUNT(*) FROM CurtidasAvaliacao WHERE id_avaliacao = ? AND id_usuario = ?",
+            (id_avaliacao, usuario_id)
         )
         existing_like = cursor.fetchone()[0]
 
         if existing_like > 0:
-            # Se a curtida existe remove
             cursor.execute(
-                "DELETE FROM CurtidasAvaliacao WHERE id_filme = ? AND id_usuario = ?",
-                (id_filme, usuario_id_curtindo)
+                "DELETE FROM CurtidasAvaliacao WHERE id_avaliacao = ? AND id_usuario = ?",
+                (id_avaliacao, usuario_id)
             )
             conn.commit()
             return jsonify({"message": "Curtida removida com sucesso!"}), 200
         else:
-            # Se a curtida não existe curte
             cursor.execute(
-                "INSERT INTO CurtidasAvaliacao (id_filme, id_usuario) VALUES (?, ?)",
-                (id_filme, usuario_id_curtindo)
+                "INSERT INTO CurtidasAvaliacao (id_avaliacao, id_usuario, data_curtida) VALUES (?, ?, ?)",
+                (id_avaliacao, usuario_id, datetime.now())
             )
             conn.commit()
             return jsonify({"message": "Curtida adicionada com sucesso!"}), 201
