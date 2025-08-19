@@ -26,13 +26,18 @@ def get_filmes_vistos_count():
     except Exception as e:
         return jsonify({"message": f"Erro no servidor: {str(e)}"}), 500
 
-# Rota original para obter a lista completa de filmes vistos
 @listas_bp.route('/<int:usuario_id>/vistos', methods=['GET'])
 def get_lista_vistos(usuario_id):
     try:
         conn = get_db_connection()
         filmes_vistos = conn.execute(
-            'SELECT f.* FROM Filme_Lista fl JOIN Lista l ON fl.id_lista = l.id_lista JOIN Filme f ON fl.id_filme = f.id_filme WHERE l.id_usuario = ? AND l.nome_lista = ? COLLATE NOCASE',
+            '''
+            SELECT f.* FROM Filme_Lista fl 
+            JOIN Lista l ON fl.id_lista = l.id_lista 
+            JOIN Filme f ON fl.id_filme = f.id_filme 
+            WHERE l.id_usuario = ? AND l.nome_lista = ? COLLATE NOCASE
+            ORDER BY fl.data_adicionado DESC 
+            ''',
             (usuario_id, 'Vistos')
         ).fetchall()
         conn.close()
@@ -41,13 +46,18 @@ def get_lista_vistos(usuario_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Rota para obter a lista 'Desejo Ver' (watchlist)
 @listas_bp.route('/<int:usuario_id>/watchlist', methods=['GET'])
 def get_watchlist(usuario_id):
     try:
         conn = get_db_connection()
         watchlist = conn.execute(
-            'SELECT f.* FROM Filme_Lista fl JOIN Lista l ON fl.id_lista = l.id_lista JOIN Filme f ON fl.id_filme = f.id_filme WHERE l.id_usuario = ? AND l.nome_lista = ? COLLATE NOCASE',
+            '''
+            SELECT f.* FROM Filme_Lista fl 
+            JOIN Lista l ON fl.id_lista = l.id_lista 
+            JOIN Filme f ON fl.id_filme = f.id_filme 
+            WHERE l.id_usuario = ? AND l.nome_lista = ? COLLATE NOCASE
+            ORDER BY fl.data_adicionado DESC
+            ''',
             (usuario_id, 'Desejo Ver')
         ).fetchall()
         conn.close()
@@ -56,14 +66,9 @@ def get_watchlist(usuario_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
         
-# Rotas de POST corrigidas
 @listas_bp.route('/adicionar_filme', methods=['POST'])
 def adicionar_filme_a_lista():
     data = request.get_json()
-
-    print("DEBUG: Requisição POST para adicionar_filme recebida.")
-    print(f"DEBUG: Dados recebidos: {data}")
-
     filme_id = data.get('filme_id')
     nome_lista = data.get('nome_lista')
     id_usuario = data.get('id_usuario')
@@ -72,33 +77,34 @@ def adicionar_filme_a_lista():
         return jsonify({"message": "ID do filme, nome da lista e ID do usuário são obrigatórios"}), 400
 
     conn = get_db_connection()
-    lista = conn.execute(
-        'SELECT * FROM Lista WHERE id_usuario = ? AND nome_lista = ?',
-        (id_usuario, nome_lista)
-    ).fetchone()
-
-    if lista is None:
-        cursor = conn.cursor()
-        cursor.execute(
-            'INSERT INTO Lista (id_usuario, nome_lista) VALUES (?, ?)',
-            (id_usuario, nome_lista)
-        )
-        conn.commit()
-        id_lista = cursor.lastrowid
-    else:
-        id_lista = lista['id_lista']
-
     try:
+        lista = conn.execute(
+            'SELECT * FROM Lista WHERE id_usuario = ? AND nome_lista = ?',
+            (id_usuario, nome_lista)
+        ).fetchone()
+
+        if lista is None:
+            cursor = conn.cursor()
+            cursor.execute(
+                'INSERT INTO Lista (id_usuario, nome_lista) VALUES (?, ?)',
+                (id_usuario, nome_lista)
+            )
+            conn.commit()
+            id_lista = cursor.lastrowid
+        else:
+            id_lista = lista['id_lista']
+
         conn.execute(
-            'INSERT INTO Filme_Lista (id_lista, id_filme) VALUES (?, ?)',
+            'INSERT OR IGNORE INTO Filme_Lista (id_lista, id_filme) VALUES (?, ?)',
             (id_lista, filme_id)
         )
         conn.commit()
-    except sqlite3.IntegrityError:
-        conn.close()
-        return jsonify({"message": "Este filme já está nesta lista"}), 409
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
     return jsonify({"message": f"Filme adicionado à lista '{nome_lista}' com sucesso!"}), 201
 

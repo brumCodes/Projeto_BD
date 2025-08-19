@@ -14,7 +14,7 @@ const listTheme = createTheme({
   },
 });
 
-const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
+const ListaDeFilmesPage = ({ usuario, onLogout }) => {
   const { listaNome, id } = useParams();
   const navigate = useNavigate();
   const [filmesComStatus, setFilmesComStatus] = useState([]);
@@ -22,84 +22,67 @@ const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
 
   const tituloDaPagina = listaNome === 'vistos' ? 'FILMES VISTOS' : 'WATCHLIST';
 
-  const fetchListas = async () => {
-    // Verifique se o ID existe antes de fazer a requisição
-    if (!id) {
-      setIsLoading(false);
-      console.log("Erro: O ID do usuário não foi encontrado na URL.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      console.log(`Tentando buscar listas para o ID: ${id}`);
-      const [vistosResponse, watchlistResponse] = await Promise.all([
-        axios.get(`http://127.0.0.1:5000/api/listas/${id}/vistos`),
-        axios.get(`http://127.0.0.1:5000/api/listas/${id}/watchlist`)
-      ]);
-      
-      console.log("Dados de Vistos recebidos:", vistosResponse.data);
-      console.log("Dados de Watchlist recebidos:", watchlistResponse.data);
-
-      const vistosMap = new Map(vistosResponse.data.map(filme => [filme.id_filme, true]));
-      const watchlistMap = new Map(watchlistResponse.data.map(filme => [filme.id_filme, true]));
-      
-      const listaExibida = listaNome === 'vistos' ? vistosResponse.data : watchlistResponse.data;
-
-      const filmesMapeados = listaExibida.map(filme => ({
-        ...filme,
-        visto: vistosMap.has(filme.id_filme),
-        desejo_ver: watchlistMap.has(filme.id_filme)
-      }));
-      
-      setFilmesComStatus(filmesMapeados);
-      console.log("Filmes mapeados para exibição:", filmesMapeados);
-
-    } catch (error) {
-      console.error("Erro ao buscar as listas:", error);
-      // Para garantir que alguma coisa seja exibida na tela
-      setFilmesComStatus([]); 
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    console.log(`useEffect acionado. listaNome: ${listaNome}, id: ${id}`);
+    const fetchListas = async () => {
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const [vistosResponse, watchlistResponse] = await Promise.all([
+          axios.get(`http://127.0.0.1:5000/api/listas/${id}/vistos`),
+          axios.get(`http://127.0.0.1:5000/api/listas/${id}/watchlist`)
+        ]);
+        
+        const vistosMap = new Map(vistosResponse.data.map(filme => [filme.id_filme, true]));
+        const watchlistMap = new Map(watchlistResponse.data.map(filme => [filme.id_filme, true]));
+        
+        const listaExibida = listaNome === 'vistos' ? vistosResponse.data : watchlistResponse.data;
+
+        const filmesMapeados = listaExibida.map(filme => ({
+          ...filme,
+          visto: vistosMap.has(filme.id_filme),
+          desejo_ver: watchlistMap.has(filme.id_filme)
+        }));
+        
+        setFilmesComStatus(filmesMapeados);
+      } catch (error) {
+        console.error("Erro ao buscar as listas:", error);
+        setFilmesComStatus([]); 
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchListas();
   }, [id, listaNome]);
 
-  const toggleLista = async (filmeId, nomeDaLista, isAdding) => {
-    if (!usuario || usuario.id !== id) {
-      console.log("Não é possível editar a lista de outro usuário.");
-      return;
-    }
-    
-    const filmeOriginal = filmesComStatus.find(f => f.id_filme === filmeId);
-    setFilmesComStatus(prevFilmes => prevFilmes.filter(filme => filme.id_filme !== filmeId));
-    
+  const onToggleLista = async (filmeId, nomeDaLista) => {
+    const isAdding = !filmesComStatus.find(f => f.id_filme === filmeId)?.[nomeDaLista === 'Vistos' ? 'visto' : 'desejo_ver'];
     const endpoint = isAdding ? 'adicionar_filme' : 'remover_filme';
+    
+    const originalState = [...filmesComStatus];
+    const updatedState = filmesComStatus.map(filme => 
+        filme.id_filme === filmeId 
+            ? { ...filme, [nomeDaLista === 'Vistos' ? 'visto' : 'desejo_ver']: isAdding }
+            : filme
+    );
+    setFilmesComStatus(updatedState);
+
     try {
       await axios.post(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
         filme_id: filmeId,
         nome_lista: nomeDaLista,
         id_usuario: usuario.id
       });
+      // Apenas na página de 'vistos' ou 'watchlist', remover da lista visualmente tem um efeito melhor
+      if (!isAdding) {
+         setFilmesComStatus(prevFilmes => prevFilmes.filter(filme => filme.id_filme !== filmeId));
+      }
     } catch (error) {
       console.error("Erro ao atualizar lista:", error);
-      if (filmeOriginal) {
-        await fetchListas();
-      }
+      setFilmesComStatus(originalState);
     }
-  };
-
-  const onToggleWatched = (filmeId, isAdding) => {
-    toggleLista(filmeId, 'Vistos', isAdding);
-  };
-  
-  const onToggleWatchlist = (filmeId, isAdding) => {
-    toggleLista(filmeId, 'Desejo Ver', isAdding);
   };
 
   if (isLoading) {
@@ -133,16 +116,15 @@ const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
             >
               Voltar
             </Button>
-            <img 
-              src={cinetrackLogo} 
-              alt="cinetrack" 
-              style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer', marginRight: 'auto' }} 
-              onClick={() => navigate('/perfil')}
-            />
-            <Button color="inherit" onClick={() => navigate('/perfil')}>
-              perfil
-            </Button>
-            <IconButton color="inherit">
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+              <img 
+                src={cinetrackLogo} 
+                alt="cinetrack" 
+                style={{ height: '35px', backgroundColor: 'transparent', cursor: 'pointer' }} 
+                onClick={() => navigate('/dashboard')}
+              />
+            </Box>
+            <IconButton color="inherit" onClick={() => navigate(`/perfil/${usuario.id}`)}>
               {usuario && usuario.url_avatar ? (
                 <Avatar 
                   src={usuario.url_avatar} 
@@ -153,7 +135,7 @@ const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
               )}
             </IconButton>
             <Button color="inherit" onClick={onLogout}>
-              sair
+              Sair
             </Button>
           </Toolbar>
         </AppBar>
@@ -169,9 +151,7 @@ const ListaDeFilmesPage = ({ usuario, onVerDetalhes, onLogout }) => {
                 <Grid item key={filme.id_filme} xs={12} sm={6} md={4} lg={2.4}>
                   <MovieCard 
                     filme={filme} 
-                    onVerDetalhes={onVerDetalhes}
-                    onToggleWatched={onToggleWatched}
-                    onToggleWatchlist={onToggleWatchlist}
+                    onToggleLista={onToggleLista}
                   />
                 </Grid>
               ))}

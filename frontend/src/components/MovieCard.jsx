@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card, CardMedia, CardContent, CardActions, IconButton, Typography, Tooltip } from '@mui/material';
-import olhoIcon from '/images/icondeolho.png';
+import { useNavigate } from 'react-router-dom';
+import addLista from '/images/simbolo-mais.png';
 import verInfo from '/images/listbuttom.png';
+import olhoIcon from '/images/icondeolho.png';
 
-function MovieCard({ filme, onToggleWatchlist, onToggleWatched, onVerDetalhes }) {
-  const isWatched = filme.visto;
-  const isOnWatchlist = filme.desejo_ver;
+function MovieCard({ filme, onToggleLista }) {
+  const navigate = useNavigate();
 
   return (
     <Card
@@ -13,8 +14,8 @@ function MovieCard({ filme, onToggleWatchlist, onToggleWatched, onVerDetalhes })
       sx={{
         backgroundColor: '#303540',
         color: 'white',
-        minWidth: '160px',
-        mr: 2,
+        minWidth: '150px',
+        mr: 1,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -26,14 +27,7 @@ function MovieCard({ filme, onToggleWatchlist, onToggleWatched, onVerDetalhes })
         image={filme.url_poster}
         title={filme.titulo}
       />
-      <CardContent
-        sx={{
-          padding: '5px',
-          marginLeft: '8px',
-          marginTop: '3px',
-          flexGrow: 1,
-        }}
-      >
+      <CardContent sx={{ padding: '8px', minHeight: '50px', marginLeft: '4px', marginTop: '6px', paddingTop: '4px', paddingBottom: '8px', flexGrow: 1 }}>
         <Typography
           gutterBottom
           variant="h5"
@@ -42,11 +36,11 @@ function MovieCard({ filme, onToggleWatchlist, onToggleWatched, onVerDetalhes })
           sx={{
             fontSize: '1.06rem',
             fontWeight: '400',
-            height: '2.3rem',
+            height: '2.5rem',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            marginTop: '3px',
+            marginTop: '2px'
           }}
         >
           {filme.titulo}
@@ -57,41 +51,46 @@ function MovieCard({ filme, onToggleWatchlist, onToggleWatched, onVerDetalhes })
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          paddingTop: '4px',
-          paddingBottom: '18px',
+          paddingTop: '13px',
+          paddingBottom: '28px',
           paddingLeft: '8px',
           paddingRight: '8px',
-          height: '25px',
+          height: '20px',
+          marginTop: 'auto'
         }}
       >
-        <Tooltip title={isOnWatchlist ? "Remover da Watchlist" : "Adicionar à Watchlist"} arrow>
-          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => onToggleWatchlist(filme.id_filme, !isOnWatchlist)}>
+        <Tooltip title={filme.desejo_ver ? "Remover da Watchlist" : "Adicionar à Watchlist"} arrow>
+          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => onToggleLista(filme.id_filme, 'Desejo Ver')}>
             <img
-              src="/images/simbolo-mais.png"
+              src={addLista}
               alt="Adicionar à lista"
-              style={{ 
-                width: '31px', 
-                height: '31px', 
-                filter: isOnWatchlist ? 'opacity(0.4)' : 'none' 
+              style={{
+                width: '28px',
+                height: '28px',
+                filter: filme.desejo_ver ? 'opacity(0.4)' : 'none'
               }}
             />
           </IconButton>
         </Tooltip>
-        <Tooltip title={isWatched ? "Remover de 'Vistos'" : "Marcar como visto"} arrow>
-          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => onToggleWatched(filme.id_filme, !isWatched)}>
+        <Tooltip title={filme.visto ? "Remover de 'Vistos'" : "Marcar como visto"} arrow>
+          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => onToggleLista(filme.id_filme, 'Vistos')}>
             <img
               src={olhoIcon}
               alt="Visto"
-              style={{ width: '40px', height: '40px', filter: isWatched ? "invert(45%) sepia(85%) saturate(500%) hue-rotate(90deg)" : "none" }}
+              style={{ 
+                width: '37px', 
+                height: '37px', 
+                filter: filme.visto ? "invert(45%) sepia(85%) saturate(500%) hue-rotate(90deg)" : "none" 
+              }}
             />
           </IconButton>
         </Tooltip>
         <Tooltip title="Ver detalhes" arrow>
-          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => onVerDetalhes(filme)}>
+          <IconButton sx={{ padding: 0, mx: 0.5 }} onClick={() => navigate(`/filme/${filme.id_filme}`)}>
             <img
               src={verInfo}
               alt="Ver Detalhes"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: '36px', height: '36px' }}
             />
           </IconButton>
         </Tooltip>

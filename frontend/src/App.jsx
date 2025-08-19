@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -10,21 +10,24 @@ import './App.css';
 
 function MainApp() {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
-    const [filmeSelecionado, setFilmeSelecionado] = useState(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const usuarioSalvo = localStorage.getItem('usuarioLogado');
+        if (usuarioSalvo) {
+            setUsuarioLogado(JSON.parse(usuarioSalvo));
+        }
+    }, []);
 
     const handleLoginSuccess = (dadosDoUsuario) => {
         setUsuarioLogado(dadosDoUsuario);
+        localStorage.setItem('usuarioLogado', JSON.stringify(dadosDoUsuario));
         navigate('/dashboard');
-    };
-
-    const handleVerDetalhes = (filme) => {
-        setFilmeSelecionado(filme);
-        navigate('/filmeDetalhes');
     };
 
     const handleLogout = () => {
         setUsuarioLogado(null);
+        localStorage.removeItem('usuarioLogado');
         navigate('/');
     };
 
@@ -44,7 +47,6 @@ function MainApp() {
         }
     };
 
-    // ALTERAÇÃO CRUCIAL AQUI: Agora passamos o ID do usuário para a navegação
     const handleVerListaCompleta = (listaNome) => {
         if (usuarioLogado) {
             navigate(`/lista/${listaNome}/${usuarioLogado.id}`);
@@ -67,7 +69,6 @@ function MainApp() {
                     usuarioLogado ? (
                         <DashboardPage 
                             usuario={usuarioLogado} 
-                            onVerDetalhes={handleVerDetalhes}
                             onLogout={handleLogout}
                             onVerPerfil={handleVerPerfil}
                         />
@@ -77,23 +78,12 @@ function MainApp() {
                 } 
             />
             <Route 
-                path="/filmeDetalhes" 
+                path="/filme/:filmeId" 
                 element={
-                    filmeSelecionado ? (
-                        <FilmeDetalhesPage 
-                            key={filmeSelecionado.id_filme}
-                            filme={filmeSelecionado} 
-                            onVoltar={() => navigate('/dashboard')}
-                            usuario={usuarioLogado}
-                        />
-                    ) : (
-                        <DashboardPage 
-                            usuario={usuarioLogado} 
-                            onVerDetalhes={handleVerDetalhes}
-                            onLogout={handleLogout}
-                            onVerPerfil={handleVerPerfil}
-                        />
-                    )
+                    <FilmeDetalhesPage 
+                        usuario={usuarioLogado}
+                        onVoltar={() => navigate('/dashboard')}
+                    />
                 } 
             />
             <Route 
@@ -102,13 +92,11 @@ function MainApp() {
                     <ProfilePage 
                         usuario={usuarioLogado}
                         onLogout={handleLogout}
-                        onVerDetalhes={handleVerDetalhes} 
                         onReturnToDashboard={() => navigate('/dashboard')}
                         onVerListaCompleta={handleVerListaCompleta}
                     />
                 } 
             />
-            {/* NOVA ROTA ADICIONADA: AGORA COM ID DO USUÁRIO NA URL */}
             <Route 
                 path="/lista/:listaNome/:id" 
                 element={
@@ -116,7 +104,6 @@ function MainApp() {
                         <ListaDeFilmesPage 
                             usuario={usuarioLogado}
                             onLogout={handleLogout}
-                            onVerDetalhes={handleVerDetalhes}
                         />
                     ) : (
                         <LoginPage onLoginSuccess={handleLoginSuccess} onSwitchToRegister={handleSwitchToRegister} />
