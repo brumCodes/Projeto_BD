@@ -273,7 +273,7 @@ function DashboardPage({ usuario, onLogout, onVerPerfil }) {
                                     MenuListProps={{ 'aria-labelledby': 'listas-button' }}
                                     sx={{ '& .MuiPaper-root': { backgroundColor: '#292828', color: 'white' } }}
                                 >
-                                    <MenuItem onClick={() => handleNavigateToList('vistos')}>Filmes assistidos/MenuItem>
+                                    <MenuItem onClick={() => handleNavigateToList('vistos')}>Filmes assistidos</MenuItem>
                                     <MenuItem onClick={() => handleNavigateToList('watchlist')}>Watchlist</MenuItem>
                                 </Menu>
                             </>
