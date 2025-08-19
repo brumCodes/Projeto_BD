@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './ProfilePage.css';
 import { 
-  Box, Typography, Container, Avatar, Toolbar, AppBar, Grid, TextField, Divider, 
-  CircularProgress, IconButton, Button
+    Box, Typography, Container, Avatar, Toolbar, AppBar, Grid, TextField, Divider, 
+    CircularProgress, IconButton, Button
 } from '@mui/material';
 import axios from 'axios';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -28,7 +28,7 @@ const profileTheme = createTheme({
   },
 });
 
-function ProfilePage({ usuario, onLogout }) {
+function ProfilePage({ usuario, onLogout, onUpdateUsuario, onVerListaCompleta }) {
   const { id } = useParams();
   const [profileData, setProfileData] = useState(null);
   const [vistos, setVistos] = useState([]);
@@ -116,16 +116,17 @@ function ProfilePage({ usuario, onLogout }) {
       });
       alert("Foto de perfil atualizada com sucesso!");
       setIsEditingAvatar(false);
+      
       const profileResponse = await axios.get(`http://127.0.0.1:5000/api/usuarios/${id}/perfil`);
       setProfileData(profileResponse.data);
+      
+      if (onUpdateUsuario) {
+        onUpdateUsuario(profileResponse.data.usuario);
+      }
     } catch (error) {
       console.error("Erro ao salvar o avatar:", error);
       alert("Erro ao salvar a foto de perfil. Tente novamente.");
     }
-  };
-
-  const handleVerListaCompleta = (listaNome) => {
-    navigate(`/lista/${listaNome.toLowerCase().replace(' ', '-')}/${id}`);
   };
 
   const defaultAvatar = "https://via.placeholder.com/100/303540/FFFFFF?text=User";
@@ -142,10 +143,21 @@ function ProfilePage({ usuario, onLogout }) {
 
   if (isLoading) {
     return (
-      <Container sx={{ textAlign: 'center', mt: 10 }}>
-        <CircularProgress color="secondary" />
-        <Typography variant="h6" sx={{ mt: 2 , color: '#a7a7a7ff'}}>Carregando perfil...</Typography>
-      </Container>
+      <ThemeProvider theme={profileTheme}>
+          <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '100vh', 
+              backgroundColor: 'background.default' 
+          }}>
+              <CircularProgress color="secondary" />
+              <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
+                  Carregando perfil...
+              </Typography>
+          </Box>
+      </ThemeProvider>
     );
   }
 
@@ -260,7 +272,7 @@ function ProfilePage({ usuario, onLogout }) {
                 ATIVIDADE RECENTE
               </Typography>
               {vistos.length > 5 && (
-                <Button onClick={() => handleVerListaCompleta('Vistos')} sx={{ color: '#d1d1d1ff', textTransform: 'none' }}>
+                <Button onClick={() => onVerListaCompleta('Vistos')} sx={{ color: '#d1d1d1ff', textTransform: 'none' }}>
                   Ver Mais
                 </Button>
               )}
@@ -285,7 +297,7 @@ function ProfilePage({ usuario, onLogout }) {
                 WATCHLIST
               </Typography>
               {watchlist.length > 5 && (
-                <Button onClick={() => handleVerListaCompleta('Desejo Ver')} sx={{ color: '#d1d1d1ff', textTransform: 'none' }}>
+                <Button onClick={() => onVerListaCompleta('Desejo Ver')} sx={{ color: '#d1d1d1ff', textTransform: 'none' }}>
                   Ver Mais
                 </Button>
               )}

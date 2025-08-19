@@ -19,6 +19,11 @@ function MainApp() {
         }
     }, []);
 
+    const handleUpdateUsuario = (novosDadosUsuario) => {
+        setUsuarioLogado(novosDadosUsuario);
+        localStorage.setItem('usuarioLogado', JSON.stringify(novosDadosUsuario));
+    };
+
     const handleLoginSuccess = (dadosDoUsuario) => {
         setUsuarioLogado(dadosDoUsuario);
         localStorage.setItem('usuarioLogado', JSON.stringify(dadosDoUsuario));
@@ -92,6 +97,7 @@ function MainApp() {
                     <ProfilePage 
                         usuario={usuarioLogado}
                         onLogout={handleLogout}
+                        onUpdateUsuario={handleUpdateUsuario}
                         onReturnToDashboard={() => navigate('/dashboard')}
                         onVerListaCompleta={handleVerListaCompleta}
                     />
