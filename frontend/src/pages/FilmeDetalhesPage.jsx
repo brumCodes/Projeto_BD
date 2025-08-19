@@ -462,12 +462,15 @@ function FilmeDetalhesPage({ onVoltar, usuario }) {
                     aria-describedby="alert-dialog-description"
                     sx={{ '& .MuiPaper-root': { backgroundColor: '#252525ff', color: 'white' } }}
                 >
-                    <DialogTitle id="alert-dialog-title" sx >
-                        {"Confirmar Exclusão"}
+                    <DialogTitle id="alert-dialog-title" sx = {{ fontWeight: '600'}} >
+                        {"CONFIRMAR EXCLUSÃO"}
                     </DialogTitle>
                     <DialogContent>
-                        <DialogContentText id="alert-dialog-description" sx={{ color: '#b0b0b0' }}>
-                            Você tem certeza que quer excluir sua review? Esta ação não pode ser desfeita.
+                        <DialogContentText id="alert-dialog-description" sx={{ color: '#cac9c9ff' }}>
+                            Você tem certeza que deseja excluir essa review?
+                        </DialogContentText>
+                        <DialogContentText id="alert-dialog-description" sx={{ color: '#c9c5c5ff' }}>
+                            Esta ação não poderá ser desfeita.
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './DashboardPage.css';
 import {
     Box, AppBar, Toolbar, Typography, Button, Container, IconButton, TextField,
-    Grid, Card, CardMedia, CardContent, CardActions, Avatar, Divider
+    Grid, Card, CardMedia, CardContent, CardActions, Avatar, Divider, Menu, MenuItem
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import CssBaseline from '@mui/material/CssBaseline';
 import AddIcon from '@mui/icons-material/Add';
 import PersonIcon from '@mui/icons-material/Person';
@@ -29,6 +30,21 @@ function DashboardPage({ usuario, onLogout, onVerPerfil }) {
     const [popularFilmes, setPopularFilmes] = useState([]);
     const [filmesVistosCount, setFilmesVistosCount] = useState(0);
     const navigate = useNavigate();
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openMenu = Boolean(anchorEl);
+    
+    const handleClickMenu = (event) =>{
+        setAnchorEl(event.currentTarget);
+    }
+
+    const handleCloseMenu = () =>{
+        setAnchorEl(null);
+    }
+
+    const handleNavigateToList = (listName) => {
+        navigate(`/lista/${listName}/${usuario.id}`);
+        handleCloseMenu();
+    };
 
     const dashboardTheme = createTheme({
         typography: {
@@ -129,6 +145,7 @@ function DashboardPage({ usuario, onLogout, onVerPerfil }) {
                 ...prevStatus,
                 ...statusInicialPopulares
             }));
+
         } catch (error) {
             console.error("Erro ao buscar filmes populares:", error);
             setPopularFilmes([]);
@@ -208,31 +225,60 @@ function DashboardPage({ usuario, onLogout, onVerPerfil }) {
                                 Filtros
                             </Button>
                         </Box>
+                        
+                        {usuario && usuario.id === 1 ? (
+                            <Tooltip title="Adicionar novo filme" arrow>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => setOpenAddModal(true)}
+                                    sx={{
+                                        backgroundColor: '#27df73ff',
+                                        color: '#0a0a11ff',
+                                        borderRadius: '50px',
+                                        padding: '6px 18px',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.9rem',
+                                        textTransform: 'uppercase',
+                                        mr: 2,
+                                        '&:hover': {
+                                            backgroundColor: '#30e481ff',
+                                            transform: 'scale(1.02)',
+                                        },
+                                        transition: 'transform 0.2s ease-in-out',
+                                    }}
+                                >
+                                    Add Filme
+                                </Button>
+                            </Tooltip>
+                        ) : (
+                            <>
+                                <Button
+                                    id="listas-button"
+                                    aria-controls={openMenu ? 'listas-menu' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={openMenu ? 'true' : undefined}
+                                    onClick={handleClickMenu}
+                                    variant="contained"
+                                    startIcon={<VideoLibraryIcon />}
+                                    sx={{ backgroundColor: '#27df73ff', color: '#0a0a11ff', borderRadius: '50px', padding: '6px 18px', fontWeight: 'bold', fontSize: '0.9rem', textTransform: 'none', mr: 2, '&:hover': { backgroundColor: '#30e481ff', transform: 'scale(1.02)' }, transition: 'transform 0.2s ease-in-out' }}
+                                >
+                                    Minhas Listas
+                                </Button>
+                                <Menu
+                                    id="listas-menu"
+                                    anchorEl={anchorEl}
+                                    open={openMenu}
+                                    onClose={handleCloseMenu}
+                                    MenuListProps={{ 'aria-labelledby': 'listas-button' }}
+                                    sx={{ '& .MuiPaper-root': { backgroundColor: '#292828', color: 'white' } }}
+                                >
+                                    <MenuItem onClick={() => handleNavigateToList('vistos')}>Filmes assistidos/MenuItem>
+                                    <MenuItem onClick={() => handleNavigateToList('watchlist')}>Watchlist</MenuItem>
+                                </Menu>
+                            </>
+                        )}
 
-                        <Tooltip title="Adicionar novo filme" arrow>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={() => setOpenAddModal(true)}
-                                sx={{
-                                    backgroundColor: '#27df73ff',
-                                    color: '#0a0a11ff',
-                                    borderRadius: '50px',
-                                    padding: '6px 18px',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.9rem',
-                                    textTransform: 'uppercase',
-                                    mr: 2,
-                                    '&:hover': {
-                                        backgroundColor: '#30e481ff',
-                                        transform: 'scale(1.02)',
-                                    },
-                                    transition: 'transform 0.2s ease-in-out',
-                                }}
-                            >
-                                Add Filme
-                            </Button>
-                        </Tooltip>
                         <IconButton color="inherit" onClick={onVerPerfil}>
                             {usuario && usuario.url_avatar ? (
                                 <Avatar

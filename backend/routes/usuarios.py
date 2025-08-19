@@ -84,3 +84,5 @@ def atualizar_avatar(user_id):
 
     except Exception as e:
         return jsonify({"error": "Erro ao atualizar URL do avatar", "details": str(e)}), 500
+    
+    
