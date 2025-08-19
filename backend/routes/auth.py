@@ -21,19 +21,27 @@ def login():
     conn = get_db_connection()
 
     user = conn.execute(
+        # A consulta já busca o ID, então está perfeita.
         "SELECT id, nome_usuario, senha, url_avatar FROM usuario WHERE nome_usuario = ?",
         (username,)
     ).fetchone()
     conn.close()
 
     if user and user['senha'] == password:
+
+        # verifica se o ID do usuário logado é igual a 1 (ou seja admin)
+        is_admin = (user['id'] == 1)
+
+        usuario_data = {
+            "id": user['id'],
+            "nome_usuario": user['nome_usuario'],
+            "url_avatar": user['url_avatar'],
+            "is_admin": is_admin 
+        }
+
         return jsonify({
             "message": "Login bem-sucedido!",
-            "usuario": {
-                "id": user['id'],
-                "nome_usuario": user['nome_usuario'],
-                "url_avatar": user['url_avatar'] 
-            }
+            "usuario": usuario_data # retorna o objeto completo
         })
     else:
         return jsonify({"message": "Nome de usuário ou senha inválidos"}), 401

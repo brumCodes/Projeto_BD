@@ -27,7 +27,7 @@ const addMovieTheme = createTheme({
   },
 });
 
-function AddMovieForm({ open, onClose, onSuccess, usuario }) { // Adicionado 'usuario' aqui
+function AddMovieForm({ open, onClose, onSuccess, usuario }) { 
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,14 +39,12 @@ function AddMovieForm({ open, onClose, onSuccess, usuario }) { // Adicionado 'us
     setLoading(true);
     setError('');
 
-    // Valida se o usuário está logado antes de continuar
     if (!usuario || !usuario.id) {
         setError("Erro: Você precisa estar logado para adicionar um filme.");
         setLoading(false);
         return;
     }
 
-    // Validação frontend para campos obrigatórios
     const camposObrigatorios = ['titulo', 'ano', 'diretor'];
     for (const campo of camposObrigatorios) {
       if (!formData[campo]) {
@@ -56,10 +54,10 @@ function AddMovieForm({ open, onClose, onSuccess, usuario }) { // Adicionado 'us
       }
     }
     
-    // Converte os valores para o tipo correto e inclui o id_usuario
+
     const filmeParaEnviar = {
       ...formData,
-      id_usuario: usuario.id, // Pega o ID do objeto de usuário
+      id_usuario: usuario.id, 
       ano: parseInt(formData.ano),
       duracao: formData.duracao ? parseInt(formData.duracao) : null
     };
@@ -74,7 +72,6 @@ function AddMovieForm({ open, onClose, onSuccess, usuario }) { // Adicionado 'us
       }
     } catch (err) {
       console.error("Erro ao adicionar filme:", err);
-      // Extrai a mensagem de erro do backend para exibir no frontend
       const backendError = err.response?.data?.error || 'Erro de conexão com o servidor.';
       setError(backendError);
     } finally {

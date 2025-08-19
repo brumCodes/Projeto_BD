@@ -164,27 +164,33 @@ function FilmeDetalhesPage({ onVoltar, usuario }) {
     };
     
     const handleDeleteReview = async () => {
-        if (!reviewToDelete) return;
+    if (!reviewToDelete || !usuario) return;
 
-        try {
-            const response = await axios.delete(`http://127.0.0.1:5000/api/reviews/${reviewToDelete.id_avaliacao}`);
-            
-            setReviews(prevReviews => prevReviews.filter(r => r.id_avaliacao !== reviewToDelete.id_avaliacao));
-            setMyRating(0);
-            setUserRating(0);
-            setResenha("");
+    try {
+      const response = await axios.delete(`http://127.0.0.1:5000/api/reviews/${reviewToDelete.id_avaliacao}`, {
+        data: { usuario_id: usuario.id }
+      });
+      
+      setReviews(prevReviews => prevReviews.filter(r => r.id_avaliacao !== reviewToDelete.id_avaliacao));
+      
+      //limpa os dados da sua própria review se você a deletou
+      if (reviewToDelete.id_usuario === usuario.id) {
+        setMyRating(0);
+        setUserRating(0);
+        setResenha("");
+      }
 
-            const { media_atualizada } = response.data;
-            if (media_atualizada !== undefined) {
-                setMediaAvaliacao(media_atualizada);
-            }
+      const { media_atualizada } = response.data;
+      if (media_atualizada !== undefined) {
+        setMediaAvaliacao(media_atualizada);
+      }
 
-            handleCloseDeleteConfirm();
-        } catch (error) {
-            console.error("Erro ao deletar a review:", error);
-            alert("Não foi possível deletar a review.");
-        }
-    };
+      handleCloseDeleteConfirm();
+    } catch (error) {
+      console.error("Erro ao deletar a review:", error);
+      alert("Não foi possível deletar a review.");
+    }
+  };
 
     const toggleListaAPI = async (filmeId, nomeDaLista) => {
         if (!usuario) { 
@@ -399,16 +405,20 @@ function FilmeDetalhesPage({ onVoltar, usuario }) {
                                                 </Box>
                                             </Link>
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mt: -4, mr: 1,}}>
-                                                {usuario && review.id_usuario === usuario.id && (
-                                                    <>
-                                                        <IconButton onClick={() => handleEditReview(review)} sx={{ color: '#a1a1a1' }}>
-                                                            <EditIcon />
-                                                        </IconButton>
-                                                        <IconButton onClick={() => handleOpenDeleteConfirm(review)} sx={{ color: '#a1a1a1', ml: 1 }}>
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    </>
-                                                )}
+                                            {usuario && (review.id_usuario === usuario.id || usuario.is_admin) && (
+                                              <>
+                                            {review.id_usuario === usuario.id && (
+                                             <IconButton onClick={() => handleEditReview(review)} sx={{ color: '#a1a1a1' }}>
+                                               <EditIcon />
+                                                 </IconButton>
+                                                  )}  
+        
+                                                   {/* o autor ou o admin podem deletar uma review!!! */}
+                                               <IconButton onClick={() => handleOpenDeleteConfirm(review)} sx={{ color: '#a1a1a1', ml: 1 }}>
+                                              <DeleteIcon />
+                                               </IconButton>
+                                                 </>
+                                                    )}
                                                 <IconButton onClick={() => handleLikeReview(review)}>
                                                     <FavoriteIcon sx={{ color: review.curtido_por_voce ? '#ec4b4bff' : '#a1a1a1'}} />
                                                 </IconButton>
@@ -420,8 +430,9 @@ function FilmeDetalhesPage({ onVoltar, usuario }) {
                                         </Box>
                                     ))
                                 ) : (
-                                    <Typography variant="body1" sx={{ textAlign: 'center', mt: 4, color: '#a1a1a1' }}>
-                                        Nenhuma review encontrada para este filme.
+                                    <Typography variant="body1" sx={{ textAlign: 'center', mt: 16, color: '#a1a1a1' }}>
+                                        Este filme ainda não possui reviews...
+                                        Seja o primeiro a fazer uma.
                                     </Typography>
                                 )}
                             </Paper>
@@ -451,7 +462,7 @@ function FilmeDetalhesPage({ onVoltar, usuario }) {
                     aria-describedby="alert-dialog-description"
                     sx={{ '& .MuiPaper-root': { backgroundColor: '#252525ff', color: 'white' } }}
                 >
-                    <DialogTitle id="alert-dialog-title">
+                    <DialogTitle id="alert-dialog-title" sx >
                         {"Confirmar Exclusão"}
                     </DialogTitle>
                     <DialogContent>

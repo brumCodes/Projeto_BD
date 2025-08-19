@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Container, Grid, Button, Toolbar, AppBar, IconButton, Avatar } from "@mui/material";
+import { Box, Typography, Container, Grid, Button, Toolbar, AppBar, IconButton, Avatar, CircularProgress } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
@@ -17,79 +17,110 @@ const listTheme = createTheme({
 const ListaDeFilmesPage = ({ usuario, onLogout }) => {
   const { listaNome, id } = useParams();
   const navigate = useNavigate();
-  const [filmesComStatus, setFilmesComStatus] = useState([]);
+  const [filmes, setFilmes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const tituloDaPagina = listaNome === 'vistos' ? 'FILMES VISTOS' : 'WATCHLIST';
+  // CORREÇÃO: Usando .toLowerCase() para garantir que a comparação funcione
+  const nomeListaApi = listaNome.toLowerCase() === 'vistos' ? 'vistos' : 'watchlist';
+  const tituloDaPagina = listaNome.toLowerCase() === 'vistos' ? 'FILMES VISTOS' : 'WATCHLIST';
 
   useEffect(() => {
-    const fetchListas = async () => {
+    const fetchLista = async () => {
       if (!id) {
         setIsLoading(false);
+        setError("ID do usuário não encontrado na URL.");
         return;
       }
       setIsLoading(true);
+      setError(null);
       try {
-        const [vistosResponse, watchlistResponse] = await Promise.all([
-          axios.get(`http://127.0.0.1:5000/api/listas/${id}/vistos`),
-          axios.get(`http://127.0.0.1:5000/api/listas/${id}/watchlist`)
-        ]);
+        // Simplificado para buscar apenas a lista necessária
+        const response = await axios.get(`http://127.0.0.1:5000/api/listas/${id}/${nomeListaApi}`);
+        const filmesData = Array.isArray(response.data) ? response.data : [];
         
-        const vistosMap = new Map(vistosResponse.data.map(filme => [filme.id_filme, true]));
-        const watchlistMap = new Map(watchlistResponse.data.map(filme => [filme.id_filme, true]));
-        
-        const listaExibida = listaNome === 'vistos' ? vistosResponse.data : watchlistResponse.data;
-
-        const filmesMapeados = listaExibida.map(filme => ({
-          ...filme,
-          visto: vistosMap.has(filme.id_filme),
-          desejo_ver: watchlistMap.has(filme.id_filme)
+        // Buscando o status completo para garantir que os botões funcionem corretamente
+        const filmesComStatus = await Promise.all(filmesData.map(async (filme) => {
+          const statusRes = await axios.get(`http://127.0.0.1:5000/api/filmes/${filme.id_filme}/status?usuario_id=${id}`);
+          return {
+            ...filme,
+            visto: statusRes.data.visto,
+            desejo_ver: statusRes.data.desejo_ver
+          };
         }));
-        
-        setFilmesComStatus(filmesMapeados);
-      } catch (error) {
-        console.error("Erro ao buscar as listas:", error);
-        setFilmesComStatus([]); 
+
+        setFilmes(filmesComStatus);
+      } catch (err) {
+        console.error(`Erro ao buscar a lista ${nomeListaApi}:`, err);
+        setError(`Não foi possível carregar a lista.`);
+        setFilmes([]); 
       } finally {
         setIsLoading(false);
       }
     };
-    fetchListas();
+    fetchLista();
   }, [id, listaNome]);
 
   const onToggleLista = async (filmeId, nomeDaLista) => {
-    const isAdding = !filmesComStatus.find(f => f.id_filme === filmeId)?.[nomeDaLista === 'Vistos' ? 'visto' : 'desejo_ver'];
-    const endpoint = isAdding ? 'adicionar_filme' : 'remover_filme';
-    
-    const originalState = [...filmesComStatus];
-    const updatedState = filmesComStatus.map(filme => 
-        filme.id_filme === filmeId 
-            ? { ...filme, [nomeDaLista === 'Vistos' ? 'visto' : 'desejo_ver']: isAdding }
-            : filme
-    );
-    setFilmesComStatus(updatedState);
+    if (!usuario || usuario.id.toString() !== id) {
+        alert("Você só pode editar as suas próprias listas.");
+        return;
+    }
 
+    const filmeClicado = filmes.find(f => f.id_filme === filmeId);
+    if (!filmeClicado) return;
+
+    const isCurrentlyOnList = nomeDaLista === 'Vistos' ? filmeClicado.visto : filmeClicado.desejo_ver;
+    const endpoint = isCurrentlyOnList ? 'remover_filme' : 'adicionar_filme';
+    
+    const originalFilmes = [...filmes];
+
+    // Atualização otimista da UI
+    const updatedFilmes = filmes
+        .map(f => {
+            if (f.id_filme === filmeId) {
+                const key = nomeDaLista === 'Vistos' ? 'visto' : 'desejo_ver';
+                return { ...f, [key]: !isCurrentlyOnList };
+            }
+            return f;
+        })
+        // Se estivermos na página da lista e o item for removido dela, ele some da tela
+        .filter(f => {
+            if (isCurrentlyOnList) { // se a ação é remover
+                if (listaNome.toLowerCase() === 'vistos' && nomeDaLista === 'Vistos') return false;
+                if (listaNome.toLowerCase() !== 'vistos' && nomeDaLista === 'Desejo Ver') return false;
+            }
+            return true;
+        });
+    
+    setFilmes(updatedFilmes);
+    
     try {
       await axios.post(`http://127.0.0.1:5000/api/listas/${endpoint}`, {
         filme_id: filmeId,
         nome_lista: nomeDaLista,
         id_usuario: usuario.id
       });
-      // Apenas na página de 'vistos' ou 'watchlist', remover da lista visualmente tem um efeito melhor
-      if (!isAdding) {
-         setFilmesComStatus(prevFilmes => prevFilmes.filter(filme => filme.id_filme !== filmeId));
-      }
     } catch (error) {
       console.error("Erro ao atualizar lista:", error);
-      setFilmesComStatus(originalState);
+      setFilmes(originalFilmes); // Reverte em caso de erro
+      alert("Ocorreu um erro ao atualizar a lista.");
     }
   };
 
   if (isLoading) {
     return (
-      <Container sx={{ mt: 4, color: 'white', textAlign: 'center' }}>
-        <Typography variant="h5">Carregando a lista...</Typography>
-      </Container>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#121212' }}>
+          <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+        <Container sx={{ mt: 4, color: 'white', textAlign: 'center' }}>
+            <Typography variant="h5" color="error">{error}</Typography>
+        </Container>
     );
   }
 
@@ -104,7 +135,6 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'fixed',
           minHeight: '100vh',
-          flexShrink: 0
         }}
       >
         <AppBar position="static" sx={{ backgroundColor: '#11111aff', color: 'white' }}>
@@ -145,9 +175,9 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
             {tituloDaPagina}
           </Typography>
           
-          {filmesComStatus.length > 0 ? (
-            <Grid container spacing={2} justifyContent="center" sx={{ flexGrow: 1 }}>
-              {filmesComStatus.map(filme => (
+          {filmes.length > 0 ? (
+            <Grid container spacing={2} justifyContent="center">
+              {filmes.map(filme => (
                 <Grid item key={filme.id_filme} xs={12} sm={6} md={4} lg={2.4}>
                   <MovieCard 
                     filme={filme} 

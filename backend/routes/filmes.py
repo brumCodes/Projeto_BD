@@ -367,23 +367,39 @@ def get_filme_por_id(filme_id):
         if conn:
             conn.close()
 
+# Dentro de filmes.py
+
 @filmes_bp.route('/reviews/<int:review_id>', methods=['DELETE'])
 def delete_review(review_id):
+    data = request.get_json()
+    requester_id = data.get('usuario_id')
+
+    if not requester_id:
+        return jsonify({'error': 'ID do usuário solicitante é necessário'}), 400
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
-        avaliacao_info = cursor.execute("SELECT id_filme FROM Avaliacao WHERE id_avaliacao = ?", (review_id,)).fetchone()
-        if not avaliacao_info:
+        review_owner = cursor.execute("SELECT id_usuario, id_filme FROM Avaliacao WHERE id_avaliacao = ?", (review_id,)).fetchone()
+        
+        if not review_owner:
             return jsonify({'error': 'Resenha não encontrada'}), 404
-            
-        filme_id = avaliacao_info['id_filme']
+        
+        # LÓGICA DE PERMISSÃO ATUALIZADA
+        is_admin = (requester_id == 1)
+        is_owner = review_owner['id_usuario'] == requester_id
+        
+        if not is_admin and not is_owner:
+            return jsonify({'error': 'Acesso negado.'}), 403
 
+        # Se a permissão for concedida, deleta a review
+        filme_id = review_owner['id_filme']
         cursor.execute("DELETE FROM Avaliacao WHERE id_avaliacao = ?", (review_id,))
         
+        # Recalcula a média do filme
         avg_result = conn.execute("SELECT AVG(nota) FROM Avaliacao WHERE id_filme = ?", (filme_id,)).fetchone()
         nova_media = round(avg_result[0], 1) if avg_result and avg_result[0] is not None else 0
-        
         cursor.execute("UPDATE Filme SET media_avaliacao = ? WHERE id_filme = ?", (nova_media, filme_id))
 
         conn.commit()

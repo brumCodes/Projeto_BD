@@ -4,7 +4,7 @@ from db import get_db_connection
 
 listas_bp = Blueprint('listas', __name__)
 
-# Rota para a contagem de filmes vistos
+# rota para a contagem de filmes vistos
 @listas_bp.route('/vistos', methods=['GET'])
 def get_filmes_vistos_count():
     usuario_id = request.args.get('id_usuario', type=int)
