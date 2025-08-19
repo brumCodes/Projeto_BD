@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Button, TextField, Container, Box, Typography, CssBaseline, Alert, Link } from '@mui/material';
-import './RegisterPage.css';  // Importa o CSS
+import './RegisterPage.css';
 
 function RegisterPage({ onSwitchToLogin }) {
   const [username, setUsername] = useState('');
@@ -8,64 +7,116 @@ function RegisterPage({ onSwitchToLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setSuccess('');
+    setIsLoading(true);
 
-    const response = await fetch('http://127.0.0.1:5000/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome_usuario: username, email: email, senha: password }),
-    });
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome_usuario: username, email: email, senha: password }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      setSuccess("Cadastro realizado com sucesso! Volte para a tela de login para entrar.");
-    } else {
-      setError(data.message);
+      if (response.ok) {
+        setSuccess("Cadastro realizado com sucesso! Volte para a tela de login para entrar.");
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      console.error("Erro de conexão:", err);
+      setError("Não foi possível conectar ao servidor. Verifique se o backend está rodando.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <CssBaseline />
-      <Box className="registerContainer">
-        <Typography component="h1" variant="h5">
-          Criar Conta
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} className="registerForm">
-          <TextField
-            margin="normal" required fullWidth id="username"
-            label="Nome de Usuário" name="username" autoFocus
-            value={username} onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal" required fullWidth id="email"
-            label="Endereço de E-mail" name="email" type="email"
-            value={email} onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            margin="normal" required fullWidth name="password"
-            label="Senha" type="password" id="password"
-            value={password} onChange={(e) => setPassword(e.target.value)}
-          />
-          
-          {error && <Alert severity="error" className="alertMargin">{error}</Alert>}
-          {success && <Alert severity="success" className="alertMargin">{success}</Alert>}
+    <div className="register-container">
+      <div className="register-card">
+        <div className="register-header">
+          <h1>CADASTRAR</h1>
+          <p>Preencha seus dados para se cadastrar</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="register-form">
+          <div className="input-group">
+            <label htmlFor="username">Nome de Usuário</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+              placeholder="Digite seu nome de usuário"
+            />
+          </div>
 
-          <Button type="submit" fullWidth variant="contained" className="registerButton">
-            Cadastrar
-          </Button>
-          <Link href="#" variant="body2" onClick={onSwitchToLogin}>
-            {"Já tem uma conta? Faça login"}
-          </Link>
-        </Box>
-      </Box>
-    </Container>
+          <div className="input-group">
+            <label htmlFor="email">Endereço de E-mail</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Digite seu e-mail"
+            />
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Crie uma senha"
+            />
+          </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="success-message">
+              {success}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className={`register-button ${isLoading ? 'loading' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+          </button>
+
+          <div className="login-link">
+            <span>Já tem uma conta? </span>
+            <button 
+              type="button" 
+              className="link-button" 
+              onClick={onSwitchToLogin}
+            >
+              Faça login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
 export default RegisterPage;
+

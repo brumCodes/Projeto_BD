@@ -1,21 +1,17 @@
 import { useState } from 'react';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Alert, Link } from '@mui/material';
 import './LoginPage.css';
+import logoCineTrack from '/images/cinetrack-logo3.png'; 
 
 function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('http://127.0.0.1:5000/api/login', {
@@ -36,53 +32,79 @@ function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
     } catch (err) {
       console.error("Erro de conexão:", err);
       setError("Não foi possível conectar ao servidor. Verifique se o backend está rodando.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <CssBaseline />
-      <Box className="loginContainer">
-        <Typography component="h1" variant="h5">
-          Login
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} className="loginForm">
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Nome de Usuário"
-            name="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Senha"
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          
-          {error && <Alert severity="error" className="errorAlert">{error}</Alert>}
+    <div className="login-container">
+      <div className="login-card">
+        
+        <img 
+          src={logoCineTrack} 
+          alt="Logo CineTrack" 
+          className="login-logo"
+        />
 
-          <Button type="submit" fullWidth variant="contained" className="loginButton">
-            Entrar
-          </Button>
+        <div className="login-header">
+          <h1>ENTRAR</h1>
+          <p>Acesse sua conta</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="input-group">
+            <label htmlFor="username">Nome de Usuário</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+              placeholder="Digite seu nome de usuário"
+            />
+          </div>
 
-          <Link href="#" variant="body2" onClick={onSwitchToRegister}>
-            {"Não tem uma conta? Cadastre-se"}
-          </Link>
-          
-        </Box>
-      </Box>
-    </Container>
+          <div className="input-group">
+            <label htmlFor="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Digite sua senha"
+            />
+          </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className={`login-button ${isLoading ? 'loading' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </button>
+
+          <div className="register-link">
+            <span>Não tem uma conta? </span>
+            <button 
+              type="button" 
+              className="link-button" 
+              onClick={onSwitchToRegister}
+            >
+              Cadastre-se
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
