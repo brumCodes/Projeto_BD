@@ -21,7 +21,6 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // CORREÇÃO: Usando .toLowerCase() para garantir que a comparação funcione
   const nomeListaApi = listaNome.toLowerCase() === 'vistos' ? 'vistos' : 'watchlist';
   const tituloDaPagina = listaNome.toLowerCase() === 'vistos' ? 'FILMES VISTOS' : 'WATCHLIST';
 
@@ -35,11 +34,10 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
       setIsLoading(true);
       setError(null);
       try {
-        // Simplificado para buscar apenas a lista necessária
+
         const response = await axios.get(`http://127.0.0.1:5000/api/listas/${id}/${nomeListaApi}`);
         const filmesData = Array.isArray(response.data) ? response.data : [];
         
-        // Buscando o status completo para garantir que os botões funcionem corretamente
         const filmesComStatus = await Promise.all(filmesData.map(async (filme) => {
           const statusRes = await axios.get(`http://127.0.0.1:5000/api/filmes/${filme.id_filme}/status?usuario_id=${id}`);
           return {
@@ -75,7 +73,6 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
     
     const originalFilmes = [...filmes];
 
-    // Atualização otimista da UI
     const updatedFilmes = filmes
         .map(f => {
             if (f.id_filme === filmeId) {
@@ -84,9 +81,8 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
             }
             return f;
         })
-        // Se estivermos na página da lista e o item for removido dela, ele some da tela
         .filter(f => {
-            if (isCurrentlyOnList) { // se a ação é remover
+            if (isCurrentlyOnList) { 
                 if (listaNome.toLowerCase() === 'vistos' && nomeDaLista === 'Vistos') return false;
                 if (listaNome.toLowerCase() !== 'vistos' && nomeDaLista === 'Desejo Ver') return false;
             }
@@ -103,7 +99,7 @@ const ListaDeFilmesPage = ({ usuario, onLogout }) => {
       });
     } catch (error) {
       console.error("Erro ao atualizar lista:", error);
-      setFilmes(originalFilmes); // Reverte em caso de erro
+      setFilmes(originalFilmes);
       alert("Ocorreu um erro ao atualizar a lista.");
     }
   };

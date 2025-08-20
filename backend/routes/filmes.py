@@ -10,7 +10,7 @@ from datetime import datetime
 filmes_bp = Blueprint('filmes', __name__)
 CORS(filmes_bp)
 
-# Rota para obter todos os filmes ou filtrar
+# rota para obter todos os filmes ou filtrar
 @filmes_bp.route('/filmes', methods=['GET'])
 def get_filmes():
     usuario_id = request.args.get('usuario_id', type=int)
@@ -65,7 +65,7 @@ def get_filmes():
     
     return jsonify(filmes_list)
 
-# Rota para adicionar um novo filme
+#rota para adicionar um novo filme
 @filmes_bp.route('/filmes', methods=['POST'])
 def add_filme():
     conn = None
@@ -111,7 +111,7 @@ def add_filme():
     finally:
         if conn: conn.close()
 
-# Rota para obter o status do filme
+# rota para obter o status do filme
 @filmes_bp.route('/filmes/<int:filme_id>/status', methods=['GET'])
 def get_filme_status(filme_id):
     usuario_id = request.args.get('usuario_id', type=int)
@@ -133,7 +133,7 @@ def get_filme_status(filme_id):
         "desejo_ver": bool(desejo_ver_result)
     })
 
-# Rota para salvar a avaliação de um filme
+# rota para salvar a avaliação de um filme
 @filmes_bp.route('/filmes/<int:filme_id>/avaliacao', methods=['POST'])
 def add_avaliacao(filme_id):
     data = request.json
@@ -195,7 +195,7 @@ def add_avaliacao(filme_id):
     finally:
         conn.close()
 
-# Rota para ATUALIZAR uma resenha existente
+# rota para ATUALIZAR uma resenha existente
 @filmes_bp.route('/reviews/<int:review_id>', methods=['PUT'])
 def update_review(review_id):
     conn = None
@@ -240,7 +240,7 @@ def update_review(review_id):
     finally:
         if conn: conn.close()
 
-# Rota para obter filmes populares
+# rota para filtrar os mais bem avaliados do catalogo
 @filmes_bp.route('/filmes/populares', methods=['GET'])
 def get_popular_filmes():
     usuario_id = request.args.get('usuario_id', type=int)
@@ -367,8 +367,7 @@ def get_filme_por_id(filme_id):
         if conn:
             conn.close()
 
-# Dentro de filmes.py
-
+# deletar reviews (Admin pode todas)
 @filmes_bp.route('/reviews/<int:review_id>', methods=['DELETE'])
 def delete_review(review_id):
     data = request.get_json()
@@ -386,18 +385,15 @@ def delete_review(review_id):
         if not review_owner:
             return jsonify({'error': 'Resenha não encontrada'}), 404
         
-        # LÓGICA DE PERMISSÃO ATUALIZADA
         is_admin = (requester_id == 1)
         is_owner = review_owner['id_usuario'] == requester_id
         
         if not is_admin and not is_owner:
             return jsonify({'error': 'Acesso negado.'}), 403
 
-        # Se a permissão for concedida, deleta a review
         filme_id = review_owner['id_filme']
         cursor.execute("DELETE FROM Avaliacao WHERE id_avaliacao = ?", (review_id,))
         
-        # Recalcula a média do filme
         avg_result = conn.execute("SELECT AVG(nota) FROM Avaliacao WHERE id_filme = ?", (filme_id,)).fetchone()
         nova_media = round(avg_result[0], 1) if avg_result and avg_result[0] is not None else 0
         cursor.execute("UPDATE Filme SET media_avaliacao = ? WHERE id_filme = ?", (nova_media, filme_id))
