@@ -127,7 +127,7 @@ Contribuições são o que fazem a comunidade open source um lugar incrível par
 
 ## 📝 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT.
 
 ## 📬 Contato
 
